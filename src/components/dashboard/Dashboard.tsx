@@ -95,18 +95,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1e293b',
-        titleColor: '#f8fafc',
-        bodyColor: '#e2e8f0',
+        backgroundColor: '#2D2A26',
+        titleColor: '#F4F0EA',
+        bodyColor: '#F4F0EA',
         padding: 12,
         boxPadding: 6,
-        borderColor: '#334155',
+        borderColor: '#38342F',
         borderWidth: 1,
+        cornerRadius: 12,
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
-      y: { grid: { color: '#334155', tickLength: 0 }, ticks: { color: '#64748b', font: { size: 11 } } }
+      x: { grid: { display: false }, ticks: { color: '#766F66', font: { size: 11 } } },
+      y: { grid: { color: '#E3DCCF', tickLength: 0 }, ticks: { color: '#766F66', font: { size: 11 } } }
     }
   };
 
@@ -114,7 +115,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom' as const, labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } },
+      legend: { position: 'bottom' as const, labels: { color: '#766F66', font: { size: 11 }, boxWidth: 12 } },
     },
     cutout: '75%'
   };
@@ -129,7 +130,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     labels: Object.keys(expensesByCategory).slice(0, 5),
     datasets: [{
       data: Object.values(expensesByCategory).slice(0, 5),
-      backgroundColor: ['#0284c7', '#a855f7', '#10b981', '#f59e0b', '#ef4444'],
+      backgroundColor: ['#6E8B74', '#C98B6A', '#C7A86B', '#89A48E', '#D59B7B'],
       borderWidth: 0
     }]
   };
@@ -140,22 +141,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {
         label: 'Income',
         data: [4200, 4500, 4800, 4800, 5100, monthlyIncome || 5650],
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: '#6E8B74',
+        backgroundColor: 'rgba(110, 139, 116, 0.12)',
         fill: true,
         tension: 0.4,
         borderWidth: 3,
-        pointBackgroundColor: '#10b981'
+        pointBackgroundColor: '#6E8B74'
       },
       {
         label: 'Expenses',
         data: [2800, 3100, 2750, 3200, 2900, monthlyExpenses || 2489],
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: '#C98B6A',
+        backgroundColor: 'rgba(201, 139, 106, 0.12)',
         fill: true,
         tension: 0.4,
         borderWidth: 3,
-        pointBackgroundColor: '#ef4444'
+        pointBackgroundColor: '#C98B6A'
       }
     ]
   };
@@ -166,7 +167,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {
         label: 'Net Cash Flow',
         data: [3200, -450, -680, 1100],
-        backgroundColor: ['#10b981', '#ef4444', '#ef4444', '#10b981'],
+        backgroundColor: ['#6E8B74', '#C98B6A', '#C98B6A', '#6E8B74'],
         borderRadius: 12
       }
     ]
@@ -242,16 +243,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Current Balance */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-sky-500/50 transition-all">
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current Balance</span>
-            <div className="p-2.5 rounded-2xl bg-sky-500/10 text-sky-500 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Current Balance</span>
+            <div className="p-2.5 rounded-2xl bg-warm-sage/10 text-warm-sage group-hover:scale-110 transition-transform">
               <Wallet className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{formatCurrency(currentBalance, settings.currency)}</h3>
-            <p className="text-xs text-emerald-500 mt-1 font-medium flex items-center space-x-1">
+            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(currentBalance, settings.currency)}</h3>
+            <p className="text-xs text-warm-sage dark:text-warm-dark-sage mt-1 font-medium flex items-center space-x-1">
               <ArrowUpRight className="w-3.5 h-3.5" />
               <span>+3.4% from last month</span>
             </p>
@@ -259,66 +260,66 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         </div>
 
         {/* Monthly Income */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-emerald-500/50 transition-all">
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Monthly Income</span>
-            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Monthly Income</span>
+            <div className="p-2.5 rounded-2xl bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage group-hover:scale-110 transition-transform">
               <ArrowUpRight className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{formatCurrency(monthlyIncome, settings.currency)}</h3>
-            <p className="text-xs text-emerald-500 mt-1 font-medium flex items-center space-x-1">
+            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(monthlyIncome, settings.currency)}</h3>
+            <p className="text-xs text-warm-sage dark:text-warm-dark-sage mt-1 font-medium flex items-center space-x-1">
               <span>Primary Salary + Freelance</span>
             </p>
           </div>
         </div>
 
         {/* Monthly Expenses */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-rose-500/50 transition-all">
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-terracotta/50 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Monthly Expenses</span>
-            <div className="p-2.5 rounded-2xl bg-rose-500/10 text-rose-500 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Monthly Expenses</span>
+            <div className="p-2.5 rounded-2xl bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta group-hover:scale-110 transition-transform">
               <ArrowDownRight className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{formatCurrency(monthlyExpenses, settings.currency)}</h3>
-            <p className="text-xs text-rose-500 mt-1 font-medium flex items-center space-x-1">
+            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(monthlyExpenses, settings.currency)}</h3>
+            <p className="text-xs text-warm-terracotta dark:text-warm-dark-terracotta mt-1 font-medium flex items-center space-x-1">
               <span>{transactions.filter(t => t.type === 'Expense').length} transactions</span>
             </p>
           </div>
         </div>
 
         {/* Savings This Month */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-purple-500/50 transition-all">
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-gold/50 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Savings This Month</span>
-            <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Savings This Month</span>
+            <div className="p-2.5 rounded-2xl bg-warm-gold/10 text-warm-gold group-hover:scale-110 transition-transform">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{formatCurrency(savingsThisMonth, settings.currency)}</h3>
-            <p className="text-xs text-purple-400 mt-1 font-medium flex items-center space-x-1">
+            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(savingsThisMonth, settings.currency)}</h3>
+            <p className="text-xs text-warm-dark-gold mt-1 font-medium flex items-center space-x-1">
               <span>{monthlyIncome ? Math.round((savingsThisMonth/monthlyIncome)*100) : 0}% savings rate</span>
             </p>
           </div>
         </div>
 
         {/* Budget Usage % */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-amber-500/50 transition-all">
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-gold/50 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Budget Usage</span>
-            <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Budget Usage</span>
+            <div className="p-2.5 rounded-2xl bg-warm-gold/10 text-warm-gold dark:text-warm-dark-gold group-hover:scale-110 transition-transform">
               <PieIcon className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{budgetUsagePercent}%</h3>
-            <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full mt-2 overflow-hidden">
+            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{budgetUsagePercent}%</h3>
+            <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2 rounded-full mt-2 overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-500 ${budgetUsagePercent > 90 ? 'bg-rose-500' : budgetUsagePercent > 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                className={`h-full rounded-full transition-all duration-500 ${budgetUsagePercent > 90 ? 'bg-warm-terracotta' : budgetUsagePercent > 75 ? 'bg-warm-gold' : 'bg-warm-sage'}`}
                 style={{ width: `${budgetUsagePercent}%` }}
               ></div>
             </div>
@@ -328,44 +329,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white border border-slate-700/50 shadow-2xl relative overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-sky-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-warm-dark-bg via-warm-dark-card to-warm-dark-bg text-white border border-warm-dark-surface/50 shadow-2xl relative overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-warm-sage/10 rounded-full blur-2xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center lg:text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-bold mb-1">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-warm-sage/20 border border-warm-sage/30 text-warm-dark-sage text-xs font-bold mb-1">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Personal Finance Terminal</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight">Financial Command Center</h2>
-            <p className="text-sm text-slate-400">Execute lightning-fast transactions, internal wallet transfers, or set up dynamic budgets instantly.</p>
+            <p className="text-sm text-warm-dark-muted">Execute lightning-fast transactions, internal wallet transfers, or set up dynamic budgets instantly.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button 
               onClick={() => { setTxCategory('Salary'); setShowIncomeModal(true); }}
-              className="px-5 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-xl shadow-emerald-500/20 hover:shadow-emerald-500/30 flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-sage hover:bg-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 hover:shadow-warm/30 flex items-center space-x-2 transition-all group"
             >
               <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span>Add Income</span>
             </button>
             <button 
               onClick={() => { setTxCategory('Food & Dining'); setShowExpenseModal(true); }}
-              className="px-5 py-3.5 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-sm shadow-xl shadow-rose-500/20 hover:shadow-rose-500/30 flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-terracotta hover:bg-warm-dark-terracotta text-white font-bold text-sm shadow-xl shadow-warm/20 hover:shadow-warm/30 flex items-center space-x-2 transition-all group"
             >
               <MinusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span>Add Expense</span>
             </button>
             <button 
               onClick={() => setShowTransferModal(true)}
-              className="px-5 py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm shadow-xl shadow-sky-500/20 hover:shadow-sky-500/30 flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-xl shadow-warm/20 hover:shadow-warm/30 flex items-center space-x-2 transition-all group"
             >
               <ArrowRightLeft className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span>Transfer Funds</span>
             </button>
             <button 
               onClick={() => setShowBudgetModal(true)}
-              className="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-dark-card hover:bg-warm-dark-surface border border-warm-dark-surface text-white font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
             >
-              <PieIcon className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+              <PieIcon className="w-5 h-5 text-warm-dark-gold group-hover:scale-110 transition-transform" />
               <span>Create Budget</span>
             </button>
           </div>
@@ -376,13 +377,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Income vs Expense Trend */}
-        <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="lg:col-span-2 p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Income vs Expense Trend</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">6-Month financial cash flow comparison</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Income vs Expense Trend</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">6-Month financial cash flow comparison</p>
             </div>
-            <button onClick={() => setActiveTab('analytics')} className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 flex items-center space-x-1 transition-colors">
+            <button onClick={() => setActiveTab('analytics')} className="text-xs font-bold text-warm-sage hover:text-warm-sage dark:hover:text-warm-dark-sage flex items-center space-x-1 transition-colors">
               <span>Full Analytics</span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -396,10 +397,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="space-y-8 flex flex-col">
           
           {/* Spending Breakdown */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex-1 flex flex-col">
+          <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Spending Breakdown</h3>
-              <span className="text-xs px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 font-semibold text-slate-600 dark:text-slate-300">Top 5</span>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Spending Breakdown</h3>
+              <span className="text-xs px-2.5 py-1 rounded-xl bg-warm-surface dark:bg-warm-dark-surface font-semibold text-warm-muted dark:text-warm-dark-muted">Top 5</span>
             </div>
             <div className="flex-1 min-h-[220px] w-full relative">
               <Doughnut data={spendingDoughnutData} options={doughnutOptions} />
@@ -414,13 +415,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Recent Transactions Widget */}
-        <div className="lg:col-span-2 p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="lg:col-span-2 p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Recent Transactions</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Your latest personal income and expense records</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Recent Transactions</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Your latest personal income and expense records</p>
             </div>
-            <button onClick={() => setActiveTab('transactions')} className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 flex items-center space-x-1 transition-colors">
+            <button onClick={() => setActiveTab('transactions')} className="text-xs font-bold text-warm-sage hover:text-warm-sage dark:hover:text-warm-dark-sage flex items-center space-x-1 transition-colors">
               <span>View All</span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -428,23 +429,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
           <div className="divide-y divide-slate-100 dark:divide-slate-700/50 flex-1 overflow-y-auto max-h-[360px] custom-scrollbar pr-2">
             {transactions.slice(0, 6).map(tx => (
-              <div key={tx.id} className="py-3.5 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-700/30 rounded-2xl px-3 transition-colors">
+              <div key={tx.id} className="py-3.5 flex items-center justify-between group hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 rounded-2xl px-3 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold flex-shrink-0 shadow-sm ${
-                    tx.type === 'Income' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
+                    tx.type === 'Income' ? 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage border border-warm-sage/30' : 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta border border-warm-terracotta/30'
                   }`}>
                     {tx.type === 'Income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-white tracking-tight">{tx.category}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[180px] sm:max-w-xs">{tx.notes || tx.accountName}</p>
+                    <p className="text-sm font-bold text-warm-text dark:text-warm-dark-text tracking-tight">{tx.category}</p>
+                    <p className="text-[11px] text-warm-muted dark:text-warm-dark-muted truncate max-w-[180px] sm:max-w-xs">{tx.notes || tx.accountName}</p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className={`text-sm font-extrabold tracking-tight ${tx.type === 'Income' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  <p className={`text-sm font-extrabold tracking-tight ${tx.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
                     {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount, settings.currency)}
                   </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{tx.date}</p>
+                  <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium">{tx.date}</p>
                 </div>
               </div>
             ))}
@@ -455,22 +456,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="space-y-8 flex flex-col">
           
           {/* Financial Health Score Widget */}
-          <div className="p-6 rounded-3xl bg-gradient-to-tr from-sky-600 to-indigo-700 text-white shadow-xl shadow-sky-500/20 relative overflow-hidden">
+          <div className="p-6 rounded-3xl bg-gradient-to-tr from-warm-sage to-warm-dark-sage text-white shadow-xl shadow-warm/20 relative overflow-hidden">
             <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
             <div className="flex items-center justify-between mb-4 relative z-10">
-              <span className="text-xs font-bold uppercase tracking-wider text-sky-100">Financial Health Score</span>
-              <Award className="w-6 h-6 text-amber-300 animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider text-warm-dark-text">Financial Health Score</span>
+              <Award className="w-6 h-6 text-warm-dark-gold animate-pulse" />
             </div>
             <div className="relative z-10 flex items-baseline space-x-2">
               <h3 className="text-4xl font-extrabold tracking-tight">{financialHealthScore}</h3>
-              <span className="text-sm text-sky-200 font-medium">/ 100</span>
+              <span className="text-sm text-warm-dark-sage font-medium">/ 100</span>
             </div>
-            <p className="text-xs text-sky-100 mt-2 leading-relaxed relative z-10">
+            <p className="text-xs text-warm-dark-text mt-2 leading-relaxed relative z-10">
               Excellent standing! Your strong savings buffer and smart budget limits put you in the top 10% of salaried individuals.
             </p>
             <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between text-xs text-white font-bold relative z-10">
               <span>Recommendations</span>
-              <button onClick={() => setActiveTab('smart')} className="hover:underline flex items-center space-x-1 text-amber-300">
+              <button onClick={() => setActiveTab('smart')} className="hover:underline flex items-center space-x-1 text-warm-dark-gold">
                 <span>Unlock Insights</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -478,28 +479,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           </div>
 
           {/* Upcoming Bills Widget */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex-1 flex flex-col">
+          <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Upcoming Bills</h3>
-              <span className="text-xs px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-500 font-bold">Requires Action</span>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Upcoming Bills</h3>
+              <span className="text-xs px-2.5 py-1 rounded-xl bg-warm-gold/10 text-warm-gold dark:text-warm-dark-gold font-bold">Requires Action</span>
             </div>
 
             <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1">
               {upcomingBills.map(bill => (
-                <div key={bill.id} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/30 border border-slate-100 dark:border-slate-700/50 flex items-center justify-between group hover:border-sky-500/40 transition-all">
+                <div key={bill.id} className="p-3.5 rounded-2xl bg-warm-bg dark:bg-warm-dark-surface/30 border border-warm-surface dark:border-warm-dark-surface/50 flex items-center justify-between group hover:border-warm-sage/40 transition-all">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2.5 rounded-2xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                    <div className="p-2.5 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted flex-shrink-0">
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-800 dark:text-white tracking-tight">{bill.title}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Due: {bill.dueDate}</p>
+                      <p className="text-xs font-bold text-warm-text dark:text-warm-dark-text tracking-tight">{bill.title}</p>
+                      <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium">Due: {bill.dueDate}</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-xs font-extrabold text-slate-800 dark:text-white">{formatCurrency(bill.amount, settings.currency)}</p>
+                    <p className="text-xs font-extrabold text-warm-text dark:text-warm-dark-text">{formatCurrency(bill.amount, settings.currency)}</p>
                     <span className={`text-[10px] px-2 py-0.5 rounded-lg font-bold inline-block mt-1 ${
-                      bill.isPaid ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                      bill.isPaid ? 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta'
                     }`}>
                       {bill.isPaid ? 'Paid' : 'Unpaid'}
                     </span>
@@ -518,24 +519,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {/* Add Income Modal */}
       {showIncomeModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add Personal Income</h3>
-              <button onClick={() => setShowIncomeModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Add Personal Income</h3>
+              <button onClick={() => setShowIncomeModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
             <form onSubmit={handleAddIncome} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={txAmount} onChange={(e) => setTxAmount(e.target.value)} placeholder="4800.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-lg" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Income Category</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Income Category</label>
                 <select 
                   value={txCategory} onChange={(e) => setTxCategory(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Salary">Salary</option>
                   <option value="Bonus">Bonus</option>
@@ -549,24 +550,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Target Account</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Target Account</label>
                 <select 
                   value={txAccId} onChange={(e) => setTxAccId(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Notes / Description</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Notes / Description</label>
                 <input 
                   type="text" value={txNotes} onChange={(e) => setTxNotes(e.target.value)} placeholder="Monthly salary deposit"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-medium" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
               <div className="flex items-center justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setShowIncomeModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all">Add Income</button>
+                <button type="button" onClick={() => setShowIncomeModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-dark-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Add Income</button>
               </div>
             </form>
           </div>
@@ -576,24 +577,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {/* Add Expense Modal */}
       {showExpenseModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Add Personal Expense</h3>
-              <button onClick={() => setShowExpenseModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Add Personal Expense</h3>
+              <button onClick={() => setShowExpenseModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
             <form onSubmit={handleAddExpense} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={txAmount} onChange={(e) => setTxAmount(e.target.value)} placeholder="85.50"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-lg" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Expense Category</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Expense Category</label>
                 <select 
                   value={txCategory} onChange={(e) => setTxCategory(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Food & Dining">Food & Dining</option>
                   <option value="Groceries">Groceries</option>
@@ -611,24 +612,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Source Account / Card</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Source Account / Card</label>
                 <select 
                   value={txAccId} onChange={(e) => setTxAccId(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Notes / Description</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Notes / Description</label>
                 <input 
                   type="text" value={txNotes} onChange={(e) => setTxNotes(e.target.value)} placeholder="Dinner with colleagues"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-medium" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
               <div className="flex items-center justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setShowExpenseModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-sm shadow-lg shadow-rose-500/20 transition-all">Add Expense</button>
+                <button type="button" onClick={() => setShowExpenseModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-terracotta hover:bg-warm-dark-terracotta text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Add Expense</button>
               </div>
             </form>
           </div>
@@ -638,47 +639,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {/* Transfer Funds Modal */}
       {showTransferModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Transfer Between Accounts</h3>
-              <button onClick={() => setShowTransferModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Transfer Between Accounts</h3>
+              <button onClick={() => setShowTransferModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
             <form onSubmit={handleTransfer} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">From Account</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">From Account</label>
                 <select 
                   value={transFrom} onChange={(e) => setTransFrom(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">To Account</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">To Account</label>
                 <select 
                   value={transTo} onChange={(e) => setTransTo(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={transAmount} onChange={(e) => setTransAmount(e.target.value)} placeholder="500.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-lg" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Notes</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Notes</label>
                 <input 
                   type="text" value={transNotes} onChange={(e) => setTransNotes(e.target.value)} placeholder="Monthly savings contribution"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-medium" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
               <div className="flex items-center justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setShowTransferModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all">Execute Transfer</button>
+                <button type="button" onClick={() => setShowTransferModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Execute Transfer</button>
               </div>
             </form>
           </div>
@@ -688,24 +689,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {/* Create Budget Modal */}
       {showBudgetModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Create New Budget</h3>
-              <button onClick={() => setShowBudgetModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Create New Budget</h3>
+              <button onClick={() => setShowBudgetModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
             <form onSubmit={handleCreateBudget} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Budget Name</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Budget Name</label>
                 <input 
                   type="text" required value={bName} onChange={(e) => setBName(e.target.value)} placeholder="Weekend Dining & Fun"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-bold" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-bold" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Target Category</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Target Category</label>
                 <select 
                   value={bCategory} onChange={(e) => setBCategory(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Food & Dining">Food & Dining</option>
                   <option value="Groceries">Groceries</option>
@@ -716,15 +717,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Monthly Cap ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Monthly Cap ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={bAmount} onChange={(e) => setBAmount(e.target.value)} placeholder="400.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-lg" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
                 />
               </div>
               <div className="flex items-center justify-end space-x-3 pt-4">
-                <button type="button" onClick={() => setShowBudgetModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-lg shadow-purple-500/20 transition-all">Save Budget</button>
+                <button type="button" onClick={() => setShowBudgetModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-gold hover:bg-warm-gold text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Save Budget</button>
               </div>
             </form>
           </div>
