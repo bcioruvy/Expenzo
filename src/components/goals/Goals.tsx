@@ -12,6 +12,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { EmptyState } from '../shared/EmptyState';
 
 export const Goals: React.FC = () => {
   const { goals, addGoal, editGoal, removeGoal, settings } = useFinance();
@@ -101,6 +102,17 @@ export const Goals: React.FC = () => {
       </div>
 
       {/* Goals Grid */}
+      {goals.length === 0 ? (
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60">
+          <EmptyState
+            icon={Target}
+            title="No savings goals yet"
+            message="Set a goal — like a home deposit or emergency fund — and track your progress toward it here."
+            actionLabel="Create Goal"
+            onAction={() => setShowModal(true)}
+          />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {goals.map(gl => {
           const progressPercent = Math.min(100, Math.round((gl.currentAmount / gl.targetAmount) * 100));
@@ -200,6 +212,7 @@ export const Goals: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* Add / Edit Goal Modal */}
       {showModal && (
