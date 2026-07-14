@@ -28,7 +28,7 @@ export const Goals: React.FC = () => {
   const [gDeadline, setGDeadline] = useState(new Date().toISOString().split('T')[0]);
   const [gCategory, setGCategory] = useState('Savings');
   const [gNotes, setGNotes] = useState('');
-  const [gColor, setGColor] = useState('#10b981');
+  const [gColor, setGColor] = useState('#6E8B74');
 
   const openAddModal = () => {
     setModalMode('add');
@@ -38,7 +38,7 @@ export const Goals: React.FC = () => {
     setGDeadline(new Date(Date.now() + 180 * 24 * 3600 * 1000).toISOString().split('T')[0]);
     setGCategory('Savings');
     setGNotes('');
-    setGColor('#10b981');
+    setGColor('#6E8B74');
     setShowModal(true);
   };
 
@@ -51,7 +51,7 @@ export const Goals: React.FC = () => {
     setGDeadline(g.deadline);
     setGCategory(g.category);
     setGNotes(g.notes || '');
-    setGColor(g.color || '#10b981');
+    setGColor(g.color || '#6E8B74');
     setShowModal(true);
   };
 
@@ -119,13 +119,13 @@ export const Goals: React.FC = () => {
               className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all relative overflow-hidden"
             >
               {/* Accent header bar */}
-              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: gl.color || '#10b981' }}></div>
+              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: gl.color || '#6E8B74' }}></div>
 
               <div>
                 <div className="flex items-center justify-between mt-1">
                   <div className="flex items-center space-x-3">
                     <div className="p-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface/80 text-warm-text dark:text-warm-dark-text group-hover:scale-110 transition-transform shadow-sm">
-                      <Target className="w-6 h-6" style={{ color: gl.color || '#10b981' }} />
+                      <Target className="w-6 h-6" style={{ color: gl.color || '#6E8B74' }} />
                     </div>
                     <div>
                       <h3 className="font-bold text-warm-text dark:text-warm-dark-text text-base tracking-tight">{gl.name}</h3>
@@ -146,7 +146,7 @@ export const Goals: React.FC = () => {
                   <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2.5 rounded-full overflow-hidden">
                     <div 
                       className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${progressPercent}%`, backgroundColor: gl.color || '#10b981' }}
+                      style={{ width: `${progressPercent}%`, backgroundColor: gl.color || '#6E8B74' }}
                     ></div>
                   </div>
 
