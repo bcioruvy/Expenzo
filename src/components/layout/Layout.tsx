@@ -13,7 +13,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-[#0b101e] overflow-hidden">
+    <div className="flex h-screen bg-warm-bg dark:bg-[#0b101e] overflow-hidden">
       
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
@@ -37,14 +37,14 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Mobile Header Bar */}
-        <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 z-30 sticky top-0">
+        <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface z-30 sticky top-0">
           <button 
             onClick={() => setMobileMenuOpen(true)}
-            className="p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 -ml-2 rounded-xl text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-card transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-bold text-slate-800 dark:text-white text-lg tracking-tight">Expenzo</span>
+          <span className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight">Expenzo</span>
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
 
