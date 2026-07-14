@@ -85,10 +85,10 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-warm-dark-bg px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Premium Background Glow */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-warm-sage/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-warm-gold/20 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Card wrapper with animated border beam */}
       <div className="max-w-md w-full relative z-10 group">
@@ -96,12 +96,12 @@ export const AuthScreen: React.FC = () => {
         <div
           className="absolute -inset-[1px] rounded-3xl opacity-90"
           style={{
-            background: 'conic-gradient(from var(--beam-angle), transparent 0%, transparent 78%, #38bdf8 86%, #a855f7 92%, transparent 100%)',
+            background: 'conic-gradient(from var(--beam-angle), transparent 0%, transparent 78%, #6E8B74 86%, #C7A86B 92%, transparent 100%)',
             animation: 'border-beam-spin 4.5s linear infinite',
           }}
         ></div>
 
-        <div className="max-w-md w-full space-y-8 bg-slate-800/95 backdrop-blur-xl p-8 rounded-3xl border border-slate-700/50 shadow-2xl relative">
+        <div className="max-w-md w-full space-y-8 bg-warm-dark-card/95 backdrop-blur-xl p-8 rounded-3xl border border-warm-dark-surface/50 shadow-2xl relative">
           <style>{`
             @property --beam-angle {
               syntax: '<angle>';
@@ -116,13 +116,13 @@ export const AuthScreen: React.FC = () => {
         
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 shadow-lg shadow-sky-500/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-warm-sage to-warm-dark-sage shadow-lg shadow-warm/30 mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-white tracking-tight">
             {showForgotPassword ? 'Reset Password' : activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-warm-dark-muted">
             {showForgotPassword 
               ? 'Enter your email to receive a password reset link' 
               : activeTab === 'signin' 
@@ -133,12 +133,12 @@ export const AuthScreen: React.FC = () => {
 
         {/* Tabs */}
         {!showForgotPassword && (
-          <div className="flex bg-slate-900/60 p-1 rounded-2xl border border-slate-700/50">
+          <div className="flex bg-warm-dark-bg/60 p-1 rounded-2xl border border-warm-dark-surface/50">
             <button
               type="button"
               onClick={() => { setActiveTab('signin'); setError(''); }}
               className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-                activeTab === 'signin' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-slate-400 hover:text-white'
+                activeTab === 'signin' ? 'bg-warm-sage text-white shadow-lg shadow-warm/30' : 'text-warm-dark-muted hover:text-white'
               }`}
             >
               Sign In
@@ -147,7 +147,7 @@ export const AuthScreen: React.FC = () => {
               type="button"
               onClick={() => { setActiveTab('signup'); setError(''); }}
               className={`flex-1 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-                activeTab === 'signup' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-slate-400 hover:text-white'
+                activeTab === 'signup' ? 'bg-warm-sage text-white shadow-lg shadow-warm/30' : 'text-warm-dark-muted hover:text-white'
               }`}
             >
               Sign Up
@@ -157,13 +157,13 @@ export const AuthScreen: React.FC = () => {
 
         {/* Error / Success Alerts */}
         {error && (
-          <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-400 text-sm flex items-center space-x-3 animate-pulse">
+          <div className="p-4 bg-warm-terracotta/10 border border-warm-terracotta/30 rounded-2xl text-warm-dark-terracotta text-sm flex items-center space-x-3 animate-pulse">
             <span>{error}</span>
           </div>
         )}
         {successMessage && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-sm flex items-center space-x-3">
-            <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <div className="p-4 bg-warm-sage/10 border border-warm-sage/30 rounded-2xl text-warm-dark-sage text-sm flex items-center space-x-3">
+            <Check className="w-5 h-5 text-warm-dark-sage flex-shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
@@ -174,10 +174,10 @@ export const AuthScreen: React.FC = () => {
           {/* Full Name field for Sign Up */}
           {activeTab === 'signup' && !showForgotPassword && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-warm-dark-muted mb-1">Full Name</label>
               <div className="relative rounded-2xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-slate-500" />
+                  <User className="h-5 w-5 text-warm-muted" />
                 </div>
                 <input
                   type="text"
@@ -185,7 +185,7 @@ export const AuthScreen: React.FC = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
-                  className="block w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors text-sm"
+                  className="block w-full pl-12 pr-4 py-3 bg-warm-dark-bg/50 border border-warm-dark-surface/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-warm-sage focus:ring-1 focus:ring-warm-sage transition-colors text-sm"
                 />
               </div>
             </div>
@@ -193,10 +193,10 @@ export const AuthScreen: React.FC = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-warm-dark-muted mb-1">Email Address</label>
             <div className="relative rounded-2xl shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-slate-500" />
+                <Mail className="h-5 w-5 text-warm-muted" />
               </div>
               <input
                 type="email"
@@ -204,7 +204,7 @@ export const AuthScreen: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="john.doe@example.com"
-                className="block w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors text-sm"
+                className="block w-full pl-12 pr-4 py-3 bg-warm-dark-bg/50 border border-warm-dark-surface/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-warm-sage focus:ring-1 focus:ring-warm-sage transition-colors text-sm"
               />
             </div>
           </div>
@@ -212,10 +212,10 @@ export const AuthScreen: React.FC = () => {
           {/* Password */}
           {!showForgotPassword && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+              <label className="block text-sm font-medium text-warm-dark-muted mb-1">Password</label>
               <div className="relative rounded-2xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-500" />
+                  <Lock className="h-5 w-5 text-warm-muted" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -223,12 +223,12 @@ export const AuthScreen: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="block w-full pl-12 pr-12 py-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors text-sm"
+                  className="block w-full pl-12 pr-12 py-3 bg-warm-dark-bg/50 border border-warm-dark-surface/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-warm-sage focus:ring-1 focus:ring-warm-sage transition-colors text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-warm-muted hover:text-warm-dark-muted transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -239,10 +239,10 @@ export const AuthScreen: React.FC = () => {
           {/* Confirm Password */}
           {activeTab === 'signup' && !showForgotPassword && (
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Confirm Password</label>
+              <label className="block text-sm font-medium text-warm-dark-muted mb-1">Confirm Password</label>
               <div className="relative rounded-2xl shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-500" />
+                  <Lock className="h-5 w-5 text-warm-muted" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -250,7 +250,7 @@ export const AuthScreen: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="block w-full pl-12 pr-12 py-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors text-sm"
+                  className="block w-full pl-12 pr-12 py-3 bg-warm-dark-bg/50 border border-warm-dark-surface/50 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-warm-sage focus:ring-1 focus:ring-warm-sage transition-colors text-sm"
                 />
               </div>
             </div>
@@ -264,14 +264,14 @@ export const AuthScreen: React.FC = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-800"
+                  className="w-4 h-4 rounded bg-warm-dark-bg border-warm-dark-surface text-warm-sage focus:ring-warm-sage focus:ring-offset-slate-800"
                 />
-                <span className="text-slate-400 hover:text-slate-300 transition-colors">Remember me</span>
+                <span className="text-warm-dark-muted hover:text-warm-dark-muted transition-colors">Remember me</span>
               </label>
               <button
                 type="button"
                 onClick={() => { setShowForgotPassword(true); setError(''); setSuccessMessage(''); }}
-                className="text-sky-400 hover:text-sky-300 transition-colors font-medium"
+                className="text-warm-dark-sage hover:text-warm-dark-sage transition-colors font-medium"
               >
                 Forgot Password?
               </button>
@@ -282,7 +282,7 @@ export const AuthScreen: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-semibold rounded-2xl shadow-xl shadow-sky-500/20 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-semibold rounded-2xl shadow-xl shadow-warm/20 focus:outline-none focus:ring-2 focus:ring-warm-sage focus:ring-offset-2 focus:ring-offset-slate-800 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50"
           >
             <span>{loading ? 'Processing...' : showForgotPassword ? 'Send Reset Link' : activeTab === 'signin' ? 'Sign In' : 'Create Account'}</span>
             {!loading && <ArrowRight className="w-5 h-5" />}
@@ -293,7 +293,7 @@ export const AuthScreen: React.FC = () => {
             <button
               type="button"
               onClick={() => { setShowForgotPassword(false); setError(''); setSuccessMessage(''); }}
-              className="w-full py-3 bg-slate-900/50 hover:bg-slate-900 border border-slate-700/50 text-slate-300 font-medium rounded-2xl transition-colors text-sm"
+              className="w-full py-3 bg-warm-dark-bg/50 hover:bg-warm-dark-bg border border-warm-dark-surface/50 text-warm-dark-muted font-medium rounded-2xl transition-colors text-sm"
             >
               Back to Sign In
             </button>
@@ -303,15 +303,15 @@ export const AuthScreen: React.FC = () => {
           {!showForgotPassword && (
             <>
               <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700/50"></div></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-800 px-3 text-slate-500">Or continue with</span></div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-warm-dark-surface/50"></div></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-warm-dark-card px-3 text-warm-muted">Or continue with</span></div>
               </div>
 
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full py-3.5 px-4 bg-slate-900/50 hover:bg-slate-900 border border-slate-700/50 text-white font-medium rounded-2xl shadow-lg focus:outline-none transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50"
+                className="w-full py-3.5 px-4 bg-warm-dark-bg/50 hover:bg-warm-dark-bg border border-warm-dark-surface/50 text-white font-medium rounded-2xl shadow-lg focus:outline-none transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
