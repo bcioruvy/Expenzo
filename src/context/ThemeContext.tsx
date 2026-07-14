@@ -20,9 +20,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         document.documentElement.classList.remove('dark');
       }
     } else {
-      // Default to dark mode for premium fintech feel
-      document.documentElement.classList.add('dark');
-      setTheme('dark');
+      // Default to light mode — warm, calm household feel
+      document.documentElement.classList.remove('dark');
+      setTheme('light');
     }
   }, []);
 
