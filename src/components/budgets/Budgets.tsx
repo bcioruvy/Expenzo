@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Budget, BudgetType } from '../../types';
+import { EmptyState } from '../shared/EmptyState';
 import { 
   PieChart as PieIcon, 
   PlusCircle, 
@@ -99,6 +100,17 @@ export const Budgets: React.FC = () => {
       </div>
 
       {/* Budgets Grid */}
+      {budgets.length === 0 ? (
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60">
+          <EmptyState
+            icon={Gauge}
+            title="No budgets yet"
+            message="Create a budget to start tracking how much you spend in each category every month."
+            actionLabel="Add New Budget"
+            onAction={() => setShowModal(true)}
+          />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {budgets.map(bg => {
           const usagePercent = Math.min(100, Math.round((bg.spentAmount / bg.targetAmount) * 100));
@@ -202,6 +214,7 @@ export const Budgets: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* Add / Edit Budget Modal */}
       {showModal && (
