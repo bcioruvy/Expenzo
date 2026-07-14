@@ -52,6 +52,7 @@ export const Transactions: React.FC = () => {
   const [formTags, setFormTags] = useState('');
   const [formPaymentMethod, setFormPaymentMethod] = useState('Credit Card');
   const [formAccountId, setFormAccountId] = useState(accounts[0]?.id || '');
+  const [formIsRecurring, setFormIsRecurring] = useState(false);
 
   // Filtered and Sorted Transactions
   const filteredTransactions = useMemo(() => {
@@ -150,6 +151,7 @@ export const Transactions: React.FC = () => {
     setFormTags('dining');
     setFormPaymentMethod('Credit Card');
     setFormAccountId(accounts[0]?.id || '');
+    setFormIsRecurring(false);
     setShowModal(true);
   };
 
@@ -165,6 +167,7 @@ export const Transactions: React.FC = () => {
     setFormTags(tx.tags.join(', '));
     setFormPaymentMethod(tx.paymentMethod);
     setFormAccountId(tx.accountId);
+    setFormIsRecurring(tx.isRecurring || false);
     setShowModal(true);
   };
 
@@ -184,7 +187,8 @@ export const Transactions: React.FC = () => {
         tags: tagsArray,
         paymentMethod: formPaymentMethod,
         accountId: acc.id,
-        accountName: acc.name
+        accountName: acc.name,
+        isRecurring: formIsRecurring
       });
     } else if (editingTx) {
       await editTransaction({
@@ -197,7 +201,8 @@ export const Transactions: React.FC = () => {
         tags: tagsArray,
         paymentMethod: formPaymentMethod,
         accountId: acc.id,
-        accountName: acc.name
+        accountName: acc.name,
+        isRecurring: formIsRecurring
       });
     }
     setShowModal(false);
@@ -592,6 +597,16 @@ export const Transactions: React.FC = () => {
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
+
+              <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={formIsRecurring}
+                  onChange={(e) => setFormIsRecurring(e.target.checked)}
+                  className="w-4 h-4 rounded bg-warm-surface dark:bg-warm-dark-bg border-warm-surface dark:border-warm-dark-surface text-warm-sage focus:ring-warm-sage focus:ring-offset-0"
+                />
+                <span className="text-xs font-semibold text-warm-muted dark:text-warm-dark-muted">This is a recurring transaction (subscription, rent, bill, etc.)</span>
+              </label>
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
                 <button type="button" onClick={() => setShowModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
