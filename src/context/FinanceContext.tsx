@@ -21,6 +21,7 @@ interface FinanceContextType {
   notifications: AppNotification[];
   settings: UserSettings;
   loading: boolean;
+  dataLoadError: boolean;
   // Computed stats
   currentBalance: number;
   monthlyIncome: number;
@@ -62,12 +63,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     userId: '', currency: 'PKR', language: 'English', theme: 'light', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
   });
   const [loading, setLoading] = useState(true);
+  const [dataLoadError, setDataLoadError] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [accs, txs, bdgs, gls, notifs, sets] = await Promise.all([
+      const results = await Promise.allSettled([
         getAccounts(user.uid),
         getTransactions(user.uid),
         getBudgets(user.uid),
@@ -75,14 +77,36 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getNotifications(user.uid),
         getUserSettings(user.uid)
       ]);
-      setAccounts(accs);
-      setTransactions(txs);
-      setBudgets(bdgs);
-      setGoals(gls);
-      setNotifications(notifs);
-      setSettings(sets);
+
+      const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes] = results;
+
+      if (accsRes.status === 'fulfilled') setAccounts(accsRes.value);
+      else console.error('Failed to load accounts:', accsRes.reason);
+
+      if (txsRes.status === 'fulfilled') setTransactions(txsRes.value);
+      else console.error('Failed to load transactions:', txsRes.reason);
+
+      if (bdgsRes.status === 'fulfilled') setBudgets(bdgsRes.value);
+      else console.error('Failed to load budgets:', bdgsRes.reason);
+
+      if (glsRes.status === 'fulfilled') setGoals(glsRes.value);
+      else console.error('Failed to load goals:', glsRes.reason);
+
+      if (notifsRes.status === 'fulfilled') setNotifications(notifsRes.value);
+      else console.error('Failed to load notifications:', notifsRes.reason);
+
+      if (setsRes.status === 'fulfilled') setSettings(setsRes.value);
+      else console.error('Failed to load settings:', setsRes.reason);
+
+      const anyFailed = results.some(r => r.status === 'rejected');
+      if (anyFailed) {
+        setDataLoadError(true);
+      } else {
+        setDataLoadError(false);
+      }
     } catch (err) {
-      console.error("Error fetching finance data:", err);
+      console.error("Unexpected error fetching finance data:", err);
+      setDataLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -345,7 +369,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading,
+      accounts, transactions, budgets, goals, notifications, settings, loading, dataLoadError,
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, addAccount, editAccount, removeAccount,
