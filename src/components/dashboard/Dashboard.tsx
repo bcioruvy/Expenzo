@@ -17,6 +17,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { getMonthlyIncomeExpense, getWeeklyCashFlow } from '../../utils/chartData';
+import { EmptyState } from '../shared/EmptyState';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -135,12 +137,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     }]
   };
 
+  const hasCategoryData = Object.keys(expensesByCategory).length > 0;
+
+  const { labels: trendLabels, income: trendIncome, expenses: trendExpenses } = getMonthlyIncomeExpense(transactions, 6);
+  const hasTrendData = trendIncome.some(v => v > 0) || trendExpenses.some(v => v > 0);
   const trendData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: trendLabels,
     datasets: [
       {
         label: 'Income',
-        data: [4200, 4500, 4800, 4800, 5100, monthlyIncome || 5650],
+        data: trendIncome,
         borderColor: '#6E8B74',
         backgroundColor: 'rgba(110, 139, 116, 0.12)',
         fill: true,
@@ -150,7 +156,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       },
       {
         label: 'Expenses',
-        data: [2800, 3100, 2750, 3200, 2900, monthlyExpenses || 2489],
+        data: trendExpenses,
         borderColor: '#C98B6A',
         backgroundColor: 'rgba(201, 139, 106, 0.12)',
         fill: true,
@@ -161,13 +167,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     ]
   };
 
+  const { labels: cfLabels, netFlow } = getWeeklyCashFlow(transactions, 4);
+  const hasCashFlowData = netFlow.some(v => v !== 0);
   const cashFlowData = {
-    labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'],
+    labels: cfLabels,
     datasets: [
       {
         label: 'Net Cash Flow',
-        data: [3200, -450, -680, 1100],
-        backgroundColor: ['#6E8B74', '#C98B6A', '#C98B6A', '#6E8B74'],
+        data: netFlow,
+        backgroundColor: netFlow.map(v => v >= 0 ? '#6E8B74' : '#C98B6A'),
         borderRadius: 12
       }
     ]
@@ -389,7 +397,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
             </button>
           </div>
           <div className="flex-1 min-h-[300px] w-full">
-            <Line data={trendData} options={chartOptions} />
+            {hasTrendData ? (
+              <Line data={trendData} options={chartOptions} />
+            ) : (
+              <EmptyState
+                icon={ArrowRight}
+                title="No trend data yet"
+                message="Log your income and expenses to see how they compare month to month."
+                actionLabel="Add a Transaction"
+                onAction={() => setShowIncomeModal(true)}
+              />
+            )}
           </div>
         </div>
 
@@ -403,7 +421,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
               <span className="text-xs px-2.5 py-1 rounded-xl bg-warm-surface dark:bg-warm-dark-surface font-semibold text-warm-muted dark:text-warm-dark-muted">Top 5</span>
             </div>
             <div className="flex-1 min-h-[220px] w-full relative">
-              <Doughnut data={spendingDoughnutData} options={doughnutOptions} />
+              {hasCategoryData ? (
+                <Doughnut data={spendingDoughnutData} options={doughnutOptions} />
+              ) : (
+                <EmptyState
+                  compact
+                  title="No spending yet"
+                  message="Add an expense to see your top categories here."
+                />
+              )}
             </div>
           </div>
 
@@ -428,7 +454,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           </div>
 
           <div className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 flex-1 overflow-y-auto max-h-[360px] custom-scrollbar pr-2">
-            {transactions.slice(0, 6).map(tx => (
+            {transactions.length === 0 ? (
+              <EmptyState
+                icon={ArrowUpRight}
+                title="No transactions yet"
+                message="Once you add income or expenses, they'll show up here."
+                actionLabel="Add a Transaction"
+                onAction={() => setShowIncomeModal(true)}
+              />
+            ) : (
+              transactions.slice(0, 6).map(tx => (
               <div key={tx.id} className="py-3.5 flex items-center justify-between group hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 rounded-2xl px-3 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold flex-shrink-0 shadow-sm ${
@@ -448,7 +483,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                   <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium">{tx.date}</p>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
