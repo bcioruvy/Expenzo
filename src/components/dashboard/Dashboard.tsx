@@ -14,7 +14,8 @@ import {
   Award, 
   ShieldCheck, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { getMonthlyIncomeExpense, getWeeklyCashFlow } from '../../utils/chartData';
@@ -66,7 +67,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     addTransaction,
     transferFunds,
     addBudget,
-    settings
+    settings,
+    dataLoadError
   } = useFinance();
 
   // Modals state
@@ -246,6 +248,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
   return (
     <div className="space-y-8">
+
+      {dataLoadError && (
+        <div className="p-4 rounded-2xl bg-warm-terracotta/10 border border-warm-terracotta/30 flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-warm-terracotta dark:text-warm-dark-terracotta flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-warm-terracotta dark:text-warm-dark-terracotta">Some of your data couldn't be loaded</p>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-0.5">This is usually temporary — try refreshing the page. If it keeps happening, check your internet connection or Firestore setup.</p>
+          </div>
+        </div>
+      )}
       
       {/* Top Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
