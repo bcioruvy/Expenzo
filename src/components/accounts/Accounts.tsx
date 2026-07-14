@@ -30,7 +30,7 @@ export const Accounts: React.FC = () => {
   const [accType, setAccType] = useState<AccountType>('Bank Account');
   const [accBalance, setAccBalance] = useState('');
   const [accCurrency, setAccCurrency] = useState(DEFAULT_CURRENCY);
-  const [accColor, setAccColor] = useState('#0284c7');
+  const [accColor, setAccColor] = useState('#6E8B74');
 
   // Modal state for Transfer Funds
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -57,7 +57,7 @@ export const Accounts: React.FC = () => {
     setAccType('Bank Account');
     setAccBalance('');
     setAccCurrency(DEFAULT_CURRENCY);
-    setAccColor('#0284c7');
+    setAccColor('#6E8B74');
     setShowAccModal(true);
   };
 
@@ -68,7 +68,7 @@ export const Accounts: React.FC = () => {
     setAccType(acc.type);
     setAccBalance(acc.balance.toString());
     setAccCurrency(acc.currency);
-    setAccColor(acc.color || '#0284c7');
+    setAccColor(acc.color || '#6E8B74');
     setShowAccModal(true);
   };
 
@@ -112,23 +112,23 @@ export const Accounts: React.FC = () => {
     <div className="space-y-8">
       
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Financial Accounts & Cards</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage cash, credit cards, bank accounts, and active savings portfolios.</p>
+          <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Financial Accounts & Cards</h2>
+          <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">Manage cash, credit cards, bank accounts, and active savings portfolios.</p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           <button
             onClick={() => { setTransFrom(accounts[0]?.id || ''); setTransTo(accounts[1]?.id || ''); setShowTransferModal(true); }}
-            className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-bold text-sm flex items-center space-x-2 transition-colors shadow-sm"
+            className="px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center space-x-2 transition-colors shadow-sm"
           >
-            <ArrowRightLeft className="w-4 h-4 text-sky-500" />
+            <ArrowRightLeft className="w-4 h-4 text-warm-sage" />
             <span>Transfer Funds</span>
           </button>
           
           <button
             onClick={openAddModal}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-sky-500/20 flex items-center space-x-2 transition-all group"
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center space-x-2 transition-all group"
           >
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             <span>Add Account</span>
@@ -143,34 +143,34 @@ export const Accounts: React.FC = () => {
           return (
             <div 
               key={acc.id} 
-              className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-sky-500/50 transition-all relative overflow-hidden"
+              className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all relative overflow-hidden"
             >
               {/* Decorative Accent Bar */}
-              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: acc.color || '#0284c7' }}></div>
+              <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: acc.color || '#6E8B74' }}></div>
 
               <div>
                 <div className="flex items-center justify-between mt-1">
                   <div className="flex items-center space-x-3">
-                    <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-700/80 text-slate-700 dark:text-white group-hover:scale-110 transition-transform shadow-sm">
-                      <Icon className="w-6 h-6" style={{ color: acc.color || '#0284c7' }} />
+                    <div className="p-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface/80 text-warm-text dark:text-warm-dark-text group-hover:scale-110 transition-transform shadow-sm">
+                      <Icon className="w-6 h-6" style={{ color: acc.color || '#6E8B74' }} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-800 dark:text-white text-base tracking-tight">{acc.name}</h3>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{acc.type}</span>
+                      <h3 className="font-bold text-warm-text dark:text-warm-dark-text text-base tracking-tight">{acc.name}</h3>
+                      <span className="text-xs text-warm-muted dark:text-warm-dark-muted font-medium">{acc.type}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Account Balance</span>
-                  <h4 className={`text-3xl font-extrabold tracking-tight mt-1 ${acc.balance < 0 ? 'text-rose-500' : 'text-slate-800 dark:text-white'}`}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Account Balance</span>
+                  <h4 className={`text-3xl font-extrabold tracking-tight mt-1 ${acc.balance < 0 ? 'text-warm-terracotta dark:text-warm-dark-terracotta' : 'text-warm-text dark:text-warm-dark-text'}`}>
                     {formatCurrency(acc.balance, acc.currency)}
                   </h4>
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-                <span className="text-xs px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-700 font-bold text-slate-600 dark:text-slate-300">
+              <div className="mt-8 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60 flex items-center justify-between">
+                <span className="text-xs px-3 py-1 rounded-xl bg-warm-surface dark:bg-warm-dark-surface font-bold text-warm-muted dark:text-warm-dark-muted">
                   {acc.currency} Currency
                 </span>
                 
@@ -178,14 +178,14 @@ export const Accounts: React.FC = () => {
                   <button 
                     onClick={() => openEditModal(acc)} 
                     title="Edit Account"
-                    className="p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-500/10 rounded-xl transition-colors"
+                    className="p-2 text-warm-dark-muted hover:text-warm-sage hover:bg-warm-sage/10 rounded-xl transition-colors"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => { if(window.confirm('Delete this account?')) removeAccount(acc.id); }} 
                     title="Delete Account"
-                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                    className="p-2 text-warm-dark-muted hover:text-warm-terracotta dark:text-warm-dark-terracotta hover:bg-warm-terracotta/10 rounded-xl transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -201,28 +201,28 @@ export const Accounts: React.FC = () => {
       {/* Add / Edit Account Modal */}
       {showAccModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">
                 {modalMode === 'add' ? 'Add Financial Account' : 'Edit Account'}
               </h3>
-              <button onClick={() => setShowAccModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+              <button onClick={() => setShowAccModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
 
             <form onSubmit={handleSaveAccount} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Account Name</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Account Name</label>
                 <input 
                   type="text" required value={accName} onChange={(e) => setAccName(e.target.value)} placeholder="Emergency Savings"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-bold" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-bold" 
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Account Type</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Account Type</label>
                 <select 
                   value={accType} onChange={(e: any) => setAccType(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Cash">Cash</option>
                   <option value="Bank Account">Bank Account</option>
@@ -233,33 +233,33 @@ export const Accounts: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Initial Balance ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Initial Balance ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={accBalance} onChange={(e) => setAccBalance(e.target.value)} placeholder="12500.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-base" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-base" 
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Currency</label>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Currency</label>
                   <input 
                     type="text" required value={accCurrency} onChange={(e) => setAccCurrency(e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-sm" 
+                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-sm" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Accent Color</label>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Accent Color</label>
                   <input 
                     type="color" value={accColor} onChange={(e) => setAccColor(e.target.value)}
-                    className="w-full h-12 p-1 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer" 
+                    className="w-full h-12 p-1 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface cursor-pointer" 
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/60">
-                <button type="button" onClick={() => setShowAccModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
+                <button type="button" onClick={() => setShowAccModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">
                   {modalMode === 'add' ? 'Save Account' : 'Update Account'}
                 </button>
               </div>
@@ -272,47 +272,47 @@ export const Accounts: React.FC = () => {
       {/* Transfer Funds Modal */}
       {showTransferModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Transfer Between Accounts</h3>
-              <button onClick={() => setShowTransferModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Transfer Between Accounts</h3>
+              <button onClick={() => setShowTransferModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
             <form onSubmit={handleExecuteTransfer} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">From Account</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">From Account</label>
                 <select 
                   value={transFrom} onChange={(e) => setTransFrom(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">To Account</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">To Account</label>
                 <select 
                   value={transTo} onChange={(e) => setTransTo(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance, a.currency)})</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Amount ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" required value={transAmount} onChange={(e) => setTransAmount(e.target.value)} placeholder="500.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-lg" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Notes</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Notes</label>
                 <input 
                   type="text" value={transNotes} onChange={(e) => setTransNotes(e.target.value)} placeholder="Monthly savings contribution"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-medium" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/60">
-                <button type="button" onClick={() => setShowTransferModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all">Execute Transfer</button>
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
+                <button type="button" onClick={() => setShowTransferModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Execute Transfer</button>
               </div>
             </form>
           </div>
