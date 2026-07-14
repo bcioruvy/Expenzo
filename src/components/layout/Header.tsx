@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 <span className="text-xs bg-warm-sage/10 text-warm-sage font-semibold px-2 py-0.5 rounded-full">{unreadCount} new</span>
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar">
+              <div className="max-h-80 overflow-y-auto divide-y divide-warm-surface dark:divide-warm-dark-surface/50 custom-scrollbar">
                 {notifications.length === 0 ? (
                   <p className="text-center py-8 text-xs text-warm-muted dark:text-warm-dark-muted">No new notifications</p>
                 ) : (
