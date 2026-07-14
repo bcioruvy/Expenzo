@@ -11,6 +11,7 @@ import {
   getNotifications, markNotificationRead as dbMarkNotificationRead,
   getUserSettings, saveUserSettings as dbSaveUserSettings
 } from '../firebase/db';
+import { formatCurrency } from '../utils/currency';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -58,7 +59,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [goals, setGoals] = useState<Goal[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
-    userId: '', currency: 'PKR', language: 'English', theme: 'dark', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
+    userId: '', currency: 'PKR', language: 'English', theme: 'light', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
   });
   const [loading, setLoading] = useState(true);
 
@@ -142,48 +143,70 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   else if (emergencySaved >= 5000) financialHealthScore += 10;
   if (financialHealthScore > 100) financialHealthScore = 96; // keep realistic max
 
-  // Smart Insights generation
-  const smartInsights: SmartInsight[] = [
-    {
-      id: 'si-1',
-      type: 'alert',
-      title: 'Dining Expense Alert',
-      message: 'You spent 18% more on dining this month compared to your usual monthly average.',
-      metric: '+18%',
-      actionText: 'Review Dining Transactions'
-    },
-    {
-      id: 'si-2',
-      type: 'recommendation',
-      title: 'Auto-Savings Recommendation',
-      message: 'Based on your stable monthly cash flow, you can safely increase your Emergency Fund auto-transfer by $150/mo.',
-      metric: '+$150/mo',
-      actionText: 'Update Savings Goal'
-    },
-    {
-      id: 'si-3',
-      type: 'info',
-      title: 'Subscription Audit',
-      message: 'You currently have 4 active recurring tech subscriptions totaling $55.00/month.',
-      metric: '$55.00',
-      actionText: 'Review Subscriptions'
-    },
-    {
-      id: 'si-4',
-      type: 'success',
-      title: 'Health Score Stable',
-      message: 'Your financial health score is Excellent (91/100). Your debt-to-income ratio is perfectly balanced.',
-      metric: '91/100'
-    }
-  ];
+  // Smart Insights generation — only shows insights genuinely supported by real transaction/goal data
+  const smartInsights: SmartInsight[] = [];
 
-  // Upcoming Bills Widget Data
-  const upcomingBills: BillReminder[] = [
-    { id: 'bill-1', title: 'High Speed Fiber Internet', amount: 45.00, dueDate: '2026-06-28', category: 'Internet', isPaid: false, isAutoPay: true },
-    { id: 'bill-2', title: 'Downtown Apartment Rent', amount: 1450.00, dueDate: '2026-07-01', category: 'Rent', isPaid: false, isAutoPay: true },
-    { id: 'bill-3', title: 'Car Insurance Premium', amount: 112.50, dueDate: '2026-07-04', category: 'Insurance', isPaid: false, isAutoPay: false },
-    { id: 'bill-4', title: 'Gym Monthly Membership', amount: 35.00, dueDate: '2026-07-10', category: 'Fitness', isPaid: true, isAutoPay: true }
-  ];
+  // Health score insight — only if there's enough transaction history to make it meaningful
+  if (transactions.length > 0) {
+    const scoreLabel = financialHealthScore >= 80 ? 'Excellent' : financialHealthScore >= 60 ? 'Good' : financialHealthScore >= 40 ? 'Fair' : 'Needs Attention';
+    smartInsights.push({
+      id: 'si-health',
+      type: financialHealthScore >= 60 ? 'success' : 'alert',
+      title: 'Financial Health Score',
+      message: `Your financial health score is ${scoreLabel} (${financialHealthScore}/100), based on your savings rate, budget usage, and emergency fund.`,
+      metric: `${financialHealthScore}/100`
+    });
+  }
+
+  // Dining alert — only if there's real dining spend to compare
+  const diningTxs = transactions.filter(t => t.type === 'Expense' && t.category === 'Food & Dining');
+  if (diningTxs.length >= 3) {
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+    const thisMonthDining = diningTxs.filter(t => t.date.startsWith(currentMonthKey)).reduce((s, t) => s + t.amount, 0);
+    const avgMonthly = diningTxs.reduce((s, t) => s + t.amount, 0) / Math.max(1, new Set(diningTxs.map(t => t.date.slice(0, 7))).size);
+    if (avgMonthly > 0 && thisMonthDining > avgMonthly * 1.1) {
+      const pctOver = Math.round(((thisMonthDining - avgMonthly) / avgMonthly) * 100);
+      smartInsights.push({
+        id: 'si-dining',
+        type: 'alert',
+        title: 'Dining Expense Alert',
+        message: `You've spent ${pctOver}% more on dining this month compared to your usual monthly average.`,
+        metric: `+${pctOver}%`,
+        actionText: 'Review Dining Transactions'
+      });
+    }
+  }
+
+  // Recurring subscriptions audit — only if any recurring transactions exist
+  const recurringSubTxs = transactions.filter(t => t.isRecurring && t.type === 'Expense');
+  if (recurringSubTxs.length > 0) {
+    const uniqueSubs = new Set(recurringSubTxs.map(t => t.category + t.notes));
+    const monthlyTotal = recurringSubTxs.reduce((s, t) => s + t.amount, 0) / Math.max(1, new Set(recurringSubTxs.map(t => t.date.slice(0, 7))).size);
+    smartInsights.push({
+      id: 'si-subs',
+      type: 'info',
+      title: 'Recurring Expenses Audit',
+      message: `You currently have ${uniqueSubs.size} recurring expense${uniqueSubs.size === 1 ? '' : 's'} totaling roughly ${formatCurrency(monthlyTotal, settings.currency)}/month.`,
+      metric: formatCurrency(monthlyTotal, settings.currency),
+      actionText: 'Review Recurring Expenses'
+    });
+  }
+
+  // Savings recommendation — only if there's a genuine positive, stable savings pattern
+  if (monthlyIncome > 0 && savingsThisMonth > 0 && (savingsThisMonth / monthlyIncome) >= 0.15) {
+    const suggestedBump = Math.round(savingsThisMonth * 0.1);
+    smartInsights.push({
+      id: 'si-savings',
+      type: 'recommendation',
+      title: 'Savings Opportunity',
+      message: `Based on your current cash flow, you could consider increasing your savings or emergency fund contribution by around ${formatCurrency(suggestedBump, settings.currency)}/mo.`,
+      metric: `+${formatCurrency(suggestedBump, settings.currency)}/mo`,
+      actionText: 'Update Savings Goal'
+    });
+  }
+
+  // Upcoming Bills Widget Data — no fabricated bills; real bill tracking isn't implemented yet, so this stays empty until it is
+  const upcomingBills: BillReminder[] = [];
 
   // Action methods
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'userId'>) => {
