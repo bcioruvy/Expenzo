@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface px-6 sm:px-8 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md bg-white/80 dark:bg-warm-dark-bg/80">
+    <header className="h-16 bg-warm-card dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface px-6 sm:px-8 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md bg-warm-card/80 dark:bg-warm-dark-bg/80">
       
       {/* Title */}
       <div>
@@ -37,10 +37,10 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       {/* Action Bar */}
       <div className="flex items-center space-x-4">
         
-        {/* Date Indicator (matches the specific 2026 prompt base) */}
+        {/* Today's Date */}
         <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-warm-surface dark:bg-warm-dark-card/80 border border-warm-surface dark:border-warm-dark-surface/60 text-xs font-medium text-warm-muted dark:text-warm-dark-muted">
-          <Calendar className="w-4 h-4 text-warm-sage" />
-          <span>June 2026</span>
+          <Calendar className="w-4 h-4 text-warm-sage dark:text-warm-dark-sage" />
+          <span>{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
         </div>
 
         {/* Notifications Trigger */}
