@@ -15,7 +15,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   User,
-  Zap
+  Zap,
+  Wallet
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'accounts', label: 'Accounts', icon: Wallet },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'budgets', label: 'Budgets', icon: PieChart },
