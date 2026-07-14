@@ -329,16 +329,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       </div>
 
       {/* Quick Actions */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-warm-dark-bg via-warm-dark-card to-warm-dark-bg text-white border border-warm-dark-surface/50 shadow-2xl relative overflow-hidden">
+      <div className="p-6 rounded-3xl bg-gradient-to-br from-warm-surface to-warm-card dark:from-warm-dark-surface dark:to-warm-dark-card border border-warm-surface dark:border-warm-dark-surface shadow-xl shadow-warm dark:shadow-none relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-warm-sage/10 rounded-full blur-2xl pointer-events-none"></div>
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center lg:text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-warm-sage/20 border border-warm-sage/30 text-warm-dark-sage text-xs font-bold mb-1">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-warm-sage/10 border border-warm-sage/30 text-warm-sage dark:text-warm-dark-sage text-xs font-bold mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Personal Finance Terminal</span>
+              <span>Your Household, at a Glance</span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight">Financial Command Center</h2>
-            <p className="text-sm text-warm-dark-muted">Execute lightning-fast transactions, internal wallet transfers, or set up dynamic budgets instantly.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-warm-text dark:text-warm-dark-text">Quick Actions</h2>
+            <p className="text-sm text-warm-muted dark:text-warm-dark-muted">Log a transaction, move money between accounts, or set up a new budget in seconds.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button 
@@ -357,16 +357,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
             </button>
             <button 
               onClick={() => setShowTransferModal(true)}
-              className="px-5 py-3.5 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-xl shadow-warm/20 hover:shadow-warm/30 flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-card dark:bg-warm-dark-card hover:bg-warm-surface dark:hover:bg-warm-dark-surface border border-warm-sage/40 text-warm-sage dark:text-warm-dark-sage font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
             >
               <ArrowRightLeft className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span>Transfer Funds</span>
             </button>
             <button 
               onClick={() => setShowBudgetModal(true)}
-              className="px-5 py-3.5 rounded-2xl bg-warm-dark-card hover:bg-warm-dark-surface border border-warm-dark-surface text-white font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-card dark:bg-warm-dark-card hover:bg-warm-surface dark:hover:bg-warm-dark-surface border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
             >
-              <PieIcon className="w-5 h-5 text-warm-dark-gold group-hover:scale-110 transition-transform" />
+              <PieIcon className="w-5 h-5 text-warm-gold dark:text-warm-dark-gold group-hover:scale-110 transition-transform" />
               <span>Create Budget</span>
             </button>
           </div>
