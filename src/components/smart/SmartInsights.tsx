@@ -14,6 +14,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import { EmptyState } from '../shared/EmptyState';
 
 interface SmartInsightsProps {
   setActiveTab: (tab: string) => void;
@@ -66,6 +67,15 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
           <span className="text-xs font-bold text-warm-muted dark:text-warm-dark-muted">Refreshed Today</span>
         </div>
 
+        {smartInsights.length === 0 ? (
+          <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60">
+            <EmptyState
+              icon={Zap}
+              title="No insights yet"
+              message="Once you've logged a bit more income and spending, we'll surface useful patterns and suggestions here."
+            />
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {smartInsights.map(insight => {
             const isAlert = insight.type === 'alert';
@@ -123,6 +133,7 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
             );
           })}
         </div>
+        )}
       </div>
 
       {/* Two Column Section: Subscription Audit & Upcoming Bill Reminders */}
@@ -141,7 +152,15 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
           </div>
 
           <div className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 flex-1 overflow-y-auto max-h-96 custom-scrollbar pr-2">
-            {recurringTxs.map(tx => (
+            {recurringTxs.length === 0 ? (
+              <EmptyState
+                compact
+                icon={RefreshCw}
+                title="No recurring expenses yet"
+                message="Mark a transaction as recurring when you add it to track subscriptions and regular bills here."
+              />
+            ) : (
+              recurringTxs.map(tx => (
               <div key={tx.id} className="py-4 flex items-center justify-between group hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 rounded-2xl px-3 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface flex items-center justify-center font-bold text-warm-text dark:text-warm-dark-muted flex-shrink-0 shadow-sm">
@@ -157,7 +176,8 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
                   <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium mt-0.5">Auto-pay Active</p>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -174,7 +194,15 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
           </div>
 
           <div className="space-y-4 flex-1 overflow-y-auto max-h-96 custom-scrollbar pr-2">
-            {upcomingBills.map(bill => (
+            {upcomingBills.length === 0 ? (
+              <EmptyState
+                compact
+                icon={Calendar}
+                title="No bill reminders set up"
+                message="Bill reminders aren't tracked automatically yet — add recurring transactions to keep an eye on your regular payments."
+              />
+            ) : (
+              upcomingBills.map(bill => (
               <div key={bill.id} className="p-4 rounded-2xl bg-warm-bg dark:bg-warm-dark-surface/40 border border-warm-surface dark:border-warm-dark-surface/60 flex items-center justify-between group hover:border-warm-sage/40 transition-all">
                 <div className="flex items-center space-x-3.5">
                   <div className={`p-3 rounded-2xl flex-shrink-0 shadow-sm ${bill.isPaid ? 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-gold/10 text-warm-gold dark:text-warm-dark-gold'}`}>
@@ -195,7 +223,8 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
                   </span>
                 </div>
               </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
