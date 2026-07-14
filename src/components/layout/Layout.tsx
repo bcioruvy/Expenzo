@@ -13,7 +13,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-warm-bg dark:bg-[#0b101e] overflow-hidden">
+    <div className="flex h-screen bg-warm-bg dark:bg-warm-dark-bg overflow-hidden">
       
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
@@ -37,7 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Mobile Header Bar */}
-        <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface z-30 sticky top-0">
+        <div className="md:hidden flex items-center justify-between px-6 h-16 bg-warm-card dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface z-30 sticky top-0">
           <button 
             onClick={() => setMobileMenuOpen(true)}
             className="p-2 -ml-2 rounded-xl text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-card transition-colors"
