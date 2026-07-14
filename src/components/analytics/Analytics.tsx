@@ -84,7 +84,7 @@ export const Analytics: React.FC = () => {
       {
         label: 'Income',
         data: [4200, 4500, 4800, 4800, 5100, 5650],
-        backgroundColor: '#10b981',
+        backgroundColor: '#6E8B74',
         borderRadius: 8
       },
       {
