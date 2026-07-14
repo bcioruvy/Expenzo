@@ -159,9 +159,6 @@ export const Settings: React.FC = () => {
                 <div>
                   <h4 className="font-bold text-warm-text dark:text-warm-dark-text text-base">{user?.fullName}</h4>
                   <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">Secure personal member account</p>
-                  <button type="button" className="mt-3 text-xs font-bold text-warm-sage hover:text-warm-sage dark:hover:text-warm-dark-sage transition-colors">
-                    Change Avatar Photo
-                  </button>
                 </div>
               </div>
 
