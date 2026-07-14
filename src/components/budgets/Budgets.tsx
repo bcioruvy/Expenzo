@@ -84,14 +84,14 @@ export const Budgets: React.FC = () => {
     <div className="space-y-8">
       
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Active Budget Allocation</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Set strict thresholds and forecast remaining monthly spend to avoid financial creep.</p>
+          <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Active Budget Allocation</h2>
+          <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">Set strict thresholds and forecast remaining monthly spend to avoid financial creep.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-sky-500/20 flex items-center space-x-2 transition-all group"
+          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center space-x-2 transition-all group"
         >
           <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
           <span>Add New Budget</span>
@@ -117,82 +117,82 @@ export const Budgets: React.FC = () => {
           return (
             <div 
               key={bg.id} 
-              className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col justify-between group hover:border-sky-500/50 transition-all relative overflow-hidden"
+              className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all relative overflow-hidden"
             >
               {/* Top Row */}
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{bg.type}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">{bg.type}</span>
                   {isFullyExceeded ? (
-                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-500 text-xs font-bold border border-rose-500/20 animate-pulse">
+                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta text-xs font-bold border border-warm-terracotta/20 animate-pulse">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       <span>Over Budget!</span>
                     </div>
                   ) : isExceeded ? (
-                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-500 text-xs font-bold border border-amber-500/20">
+                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-warm-gold/10 text-warm-gold dark:text-warm-dark-gold text-xs font-bold border border-warm-gold/20">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       <span>Warning ({usagePercent}%)</span>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-500 text-xs font-bold">
+                    <div className="flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage text-xs font-bold">
                       <CheckCircle className="w-3.5 h-3.5" />
                       <span>On Track</span>
                     </div>
                   )}
                 </div>
 
-                <h3 className="font-bold text-slate-800 dark:text-white text-lg tracking-tight mt-2">{bg.name}</h3>
-                {bg.category && <p className="text-xs text-slate-500 dark:text-slate-400">{bg.category}</p>}
+                <h3 className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight mt-2">{bg.name}</h3>
+                {bg.category && <p className="text-xs text-warm-muted dark:text-warm-dark-muted">{bg.category}</p>}
 
                 {/* Progress Bar & Amounts */}
                 <div className="mt-6 space-y-2">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">{formatCurrency(bg.spentAmount, settings.currency)}</span>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">of {formatCurrency(bg.targetAmount, settings.currency)} cap</span>
+                    <span className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(bg.spentAmount, settings.currency)}</span>
+                    <span className="text-xs font-bold text-warm-muted dark:text-warm-dark-muted">of {formatCurrency(bg.targetAmount, settings.currency)} cap</span>
                   </div>
 
-                  <div className="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2.5 rounded-full overflow-hidden">
                     <div 
-                      className={`h-full rounded-full transition-all duration-500 ${isFullyExceeded ? 'bg-rose-500' : isExceeded ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                      className={`h-full rounded-full transition-all duration-500 ${isFullyExceeded ? 'bg-warm-terracotta' : isExceeded ? 'bg-warm-gold' : 'bg-warm-sage'}`}
                       style={{ width: `${usagePercent}%` }}
                     ></div>
                   </div>
 
                   <div className="flex items-center justify-between text-xs font-semibold pt-1">
-                    <span className={remaining < 0 ? 'text-rose-500' : 'text-emerald-500'}>
+                    <span className={remaining < 0 ? 'text-warm-terracotta dark:text-warm-dark-terracotta' : 'text-warm-sage dark:text-warm-dark-sage'}>
                       {remaining < 0 ? `-${formatCurrency(Math.abs(remaining), settings.currency)} Exceeded` : `${formatCurrency(remaining, settings.currency)} Remaining`}
                     </span>
-                    <span className="text-slate-500 dark:text-slate-400">{usagePercent}% Used</span>
+                    <span className="text-warm-muted dark:text-warm-dark-muted">{usagePercent}% Used</span>
                   </div>
                 </div>
 
                 {/* Forecasting Widget */}
-                <div className="mt-6 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700/50 flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 font-medium">
-                    <Gauge className="w-4 h-4 text-sky-500 flex-shrink-0" />
+                <div className="mt-6 p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg/60 border border-warm-surface dark:border-warm-dark-surface/50 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 text-warm-muted dark:text-warm-dark-muted font-medium">
+                    <Gauge className="w-4 h-4 text-warm-sage flex-shrink-0" />
                     <span>Forecast: ~{formatCurrency(forecastTotal, settings.currency)}</span>
                   </div>
-                  <span className={`font-bold ${forecastTotal > bg.targetAmount ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <span className={`font-bold ${forecastTotal > bg.targetAmount ? 'text-warm-dark-terracotta' : 'text-warm-dark-sage'}`}>
                     {forecastStatus}
                   </span>
                 </div>
               </div>
 
               {/* Actions Footer */}
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alert at {bg.alertThreshold}%</span>
+              <div className="mt-6 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-warm-dark-muted">Alert at {bg.alertThreshold}%</span>
                 <div className="flex items-center space-x-2">
                   <button 
                     onClick={() => openEditModal(bg)} 
                     title="Edit Budget"
-                    className="p-2 text-slate-400 hover:text-sky-500 hover:bg-sky-500/10 rounded-xl transition-colors"
+                    className="p-2 text-warm-dark-muted hover:text-warm-sage hover:bg-warm-sage/10 rounded-xl transition-colors"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => { if(window.confirm('Delete this budget?')) removeBudget(bg.id); }} 
                     title="Delete Budget"
-                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                    className="p-2 text-warm-dark-muted hover:text-warm-terracotta dark:text-warm-dark-terracotta hover:bg-warm-terracotta/10 rounded-xl transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -206,28 +206,28 @@ export const Budgets: React.FC = () => {
       {/* Add / Edit Budget Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-4">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">
                 {modalMode === 'add' ? 'Add Personal Budget' : 'Edit Budget'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-bold text-xl">&times;</button>
+              <button onClick={() => setShowModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
             </div>
 
             <form onSubmit={handleSaveBudget} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Budget Name</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Budget Name</label>
                 <input 
                   type="text" required value={bName} onChange={(e) => setBName(e.target.value)} placeholder="Dining & Restaurants"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-bold" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-bold" 
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Budget Type</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Budget Type</label>
                 <select 
                   value={bType} onChange={(e: any) => setBType(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Monthly Budget">Monthly Budget</option>
                   <option value="Category Budget">Category Budget</option>
@@ -237,10 +237,10 @@ export const Budgets: React.FC = () => {
 
               {bType === 'Category Budget' && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Target Category</label>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Target Category</label>
                   <select 
                     value={bCategory} onChange={(e) => setBCategory(e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-medium text-sm"
+                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                   >
                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -249,32 +249,32 @@ export const Budgets: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Monthly Cap ({getCurrencySymbol(settings.currency)})</label>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Monthly Cap ({getCurrencySymbol(settings.currency)})</label>
                   <input 
                     type="number" step="0.01" required value={bTarget} onChange={(e) => setBTarget(e.target.value)} placeholder="500.00"
-                    className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-base" 
+                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-base" 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Alert Threshold (%)</label>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Alert Threshold (%)</label>
                   <input 
                     type="number" required value={bAlertThreshold} onChange={(e) => setBAlertThreshold(e.target.value)} placeholder="85"
-                    className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none font-bold text-base" 
+                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-base" 
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">Current Spent ({getCurrencySymbol(settings.currency)})</label>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Current Spent ({getCurrencySymbol(settings.currency)})</label>
                 <input 
                   type="number" step="0.01" value={bSpent} onChange={(e) => setBSpent(e.target.value)} placeholder="0.00"
-                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm font-medium" 
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                 />
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-slate-700/60">
-                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
+                <button type="button" onClick={() => setShowModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">
                   {modalMode === 'add' ? 'Save Budget' : 'Update Budget'}
                 </button>
               </div>
