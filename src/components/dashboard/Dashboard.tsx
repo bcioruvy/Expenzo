@@ -246,7 +246,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Current Balance</span>
-            <div className="p-2.5 rounded-2xl bg-warm-sage/10 text-warm-sage group-hover:scale-110 transition-transform">
+            <div className="p-2.5 rounded-2xl bg-warm-sage/15 border border-warm-sage/25 text-warm-sage group-hover:scale-110 transition-transform">
               <Wallet className="w-5 h-5" />
             </div>
           </div>
@@ -263,7 +263,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-sage/50 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Monthly Income</span>
-            <div className="p-2.5 rounded-2xl bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage group-hover:scale-110 transition-transform">
+            <div className="p-2.5 rounded-2xl bg-warm-sage/15 dark:bg-warm-dark-sage/15 border border-warm-sage/25 dark:border-warm-dark-sage/30 text-warm-sage dark:text-warm-dark-sage group-hover:scale-110 transition-transform">
               <ArrowUpRight className="w-5 h-5" />
             </div>
           </div>
@@ -279,7 +279,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-terracotta/50 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Monthly Expenses</span>
-            <div className="p-2.5 rounded-2xl bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta group-hover:scale-110 transition-transform">
+            <div className="p-2.5 rounded-2xl bg-warm-terracotta/15 dark:bg-warm-dark-terracotta/15 border border-warm-terracotta/25 dark:border-warm-dark-terracotta/30 text-warm-terracotta dark:text-warm-dark-terracotta group-hover:scale-110 transition-transform">
               <ArrowDownRight className="w-5 h-5" />
             </div>
           </div>
@@ -295,7 +295,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-gold/50 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Savings This Month</span>
-            <div className="p-2.5 rounded-2xl bg-warm-gold/10 text-warm-gold group-hover:scale-110 transition-transform">
+            <div className="p-2.5 rounded-2xl bg-warm-gold/15 border border-warm-gold/25 text-warm-gold group-hover:scale-110 transition-transform">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
@@ -311,7 +311,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
         <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col justify-between group hover:border-warm-gold/50 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">Budget Usage</span>
-            <div className="p-2.5 rounded-2xl bg-warm-gold/10 text-warm-gold dark:text-warm-dark-gold group-hover:scale-110 transition-transform">
+            <div className="p-2.5 rounded-2xl bg-warm-gold/15 dark:bg-warm-dark-gold/15 border border-warm-gold/25 dark:border-warm-dark-gold/30 text-warm-gold dark:text-warm-dark-gold group-hover:scale-110 transition-transform">
               <PieIcon className="w-5 h-5" />
             </div>
           </div>
@@ -357,7 +357,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
             </button>
             <button 
               onClick={() => setShowTransferModal(true)}
-              className="px-5 py-3.5 rounded-2xl bg-warm-card dark:bg-warm-dark-card hover:bg-warm-surface dark:hover:bg-warm-dark-surface border border-warm-sage/40 text-warm-sage dark:text-warm-dark-sage font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
+              className="px-5 py-3.5 rounded-2xl bg-warm-gold/10 hover:bg-warm-gold/20 border border-warm-gold/40 text-warm-gold dark:text-warm-dark-gold font-bold text-sm shadow-lg flex items-center space-x-2 transition-all group"
             >
               <ArrowRightLeft className="w-5 h-5 group-hover:scale-110 transition-transform" />
               <span>Transfer Funds</span>
@@ -427,7 +427,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-700/50 flex-1 overflow-y-auto max-h-[360px] custom-scrollbar pr-2">
+          <div className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 flex-1 overflow-y-auto max-h-[360px] custom-scrollbar pr-2">
             {transactions.slice(0, 6).map(tx => (
               <div key={tx.id} className="py-3.5 flex items-center justify-between group hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 rounded-2xl px-3 transition-colors">
                 <div className="flex items-center space-x-4">
