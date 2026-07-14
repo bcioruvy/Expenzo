@@ -11,6 +11,8 @@ import {
   BarChart2, 
   Layers 
 } from 'lucide-react';
+import { getMonthlyIncomeExpense, getCumulativeSavings, getWeeklyCashFlow } from '../../utils/chartData';
+import { EmptyState } from '../shared/EmptyState';
 
 export const Analytics: React.FC = () => {
   const { transactions, accounts, budgets } = useFinance();
@@ -77,49 +79,55 @@ export const Analytics: React.FC = () => {
     }]
   };
 
-  // Monthly Comparison Bar Chart Data
+  // Monthly Comparison Bar Chart Data — computed from real transactions
+  const { labels: monthLabels, income: monthlyIncomeSeries, expenses: monthlyExpenseSeries } = getMonthlyIncomeExpense(filteredTxs, 6);
+  const hasMonthlyData = monthlyIncomeSeries.some(v => v > 0) || monthlyExpenseSeries.some(v => v > 0);
   const barData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: monthLabels,
     datasets: [
       {
         label: 'Income',
-        data: [4200, 4500, 4800, 4800, 5100, 5650],
+        data: monthlyIncomeSeries,
         backgroundColor: '#6E8B74',
         borderRadius: 8
       },
       {
         label: 'Expenses',
-        data: [2800, 3100, 2750, 3200, 2900, 2489],
-        backgroundColor: '#ef4444',
+        data: monthlyExpenseSeries,
+        backgroundColor: '#C98B6A',
         borderRadius: 8
       }
     ]
   };
 
-  // Savings Analysis Area Chart Data (Area chart is Line with fill: true)
+  // Savings Analysis Area Chart Data — cumulative real net savings
+  const { labels: savingsLabels, cumulative } = getCumulativeSavings(filteredTxs, 6);
+  const hasSavingsData = cumulative.some(v => v !== 0);
   const areaData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    labels: savingsLabels,
     datasets: [
       {
         label: 'Cumulative Savings Growth',
-        data: [1400, 2800, 4850, 6450, 8650, 11811],
-        borderColor: '#a855f7',
-        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+        data: cumulative,
+        borderColor: '#C7A86B',
+        backgroundColor: 'rgba(199, 168, 107, 0.2)',
         fill: true,
         tension: 0.4,
         borderWidth: 3,
-        pointBackgroundColor: '#a855f7'
+        pointBackgroundColor: '#C7A86B'
       }
     ]
   };
 
-  // Cash Flow Line Chart Data
+  // Cash Flow Line Chart Data — real net flow per week
+  const { labels: cashFlowLabels, netFlow } = getWeeklyCashFlow(filteredTxs, 4);
+  const hasCashFlowData = netFlow.some(v => v !== 0);
   const cashFlowLineData = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    labels: cashFlowLabels,
     datasets: [
       {
         label: 'Net Cash Flow',
-        data: [3200, 2750, 2070, 3161],
+        data: netFlow,
         borderColor: '#6E8B74',
         backgroundColor: 'rgba(110, 139, 116, 0.12)',
         fill: true,
@@ -129,6 +137,8 @@ export const Analytics: React.FC = () => {
       }
     ]
   };
+
+  const hasSpendingData = Object.keys(expenseSummaryByCategory).length > 0;
 
   return (
     <div className="space-y-8">
@@ -203,7 +213,15 @@ export const Analytics: React.FC = () => {
             <BarChart2 className="w-5 h-5 text-warm-sage" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
-            <Bar data={barData} options={baseChartOptions} />
+            {hasMonthlyData ? (
+              <Bar data={barData} options={baseChartOptions} />
+            ) : (
+              <EmptyState
+                icon={BarChart2}
+                title="No income or expenses yet"
+                message="Add a transaction to see your monthly income and spending compared here."
+              />
+            )}
           </div>
         </div>
 
@@ -217,7 +235,15 @@ export const Analytics: React.FC = () => {
             <Layers className="w-5 h-5 text-warm-gold" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
-            <Line data={areaData} options={baseChartOptions} />
+            {hasSavingsData ? (
+              <Line data={areaData} options={baseChartOptions} />
+            ) : (
+              <EmptyState
+                icon={Layers}
+                title="No savings history yet"
+                message="Once you've logged some income and expenses, your savings growth will build up here over time."
+              />
+            )}
           </div>
         </div>
 
@@ -231,7 +257,15 @@ export const Analytics: React.FC = () => {
             <PieIcon className="w-5 h-5 text-warm-gold dark:text-warm-dark-gold" />
           </div>
           <div className="flex-1 min-h-[320px] w-full relative">
-            <Pie data={pieData} options={pieOptions} />
+            {hasSpendingData ? (
+              <Pie data={pieData} options={pieOptions} />
+            ) : (
+              <EmptyState
+                icon={PieIcon}
+                title="No spending recorded yet"
+                message="Log an expense to see how your spending breaks down by category."
+              />
+            )}
           </div>
         </div>
 
@@ -245,7 +279,15 @@ export const Analytics: React.FC = () => {
             <TrendingUp className="w-5 h-5 text-warm-sage dark:text-warm-dark-sage" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
-            <Line data={cashFlowLineData} options={baseChartOptions} />
+            {hasCashFlowData ? (
+              <Line data={cashFlowLineData} options={baseChartOptions} />
+            ) : (
+              <EmptyState
+                icon={TrendingUp}
+                title="No cash flow data yet"
+                message="Your weekly income and expense activity will show up here as you add transactions."
+              />
+            )}
           </div>
         </div>
 
