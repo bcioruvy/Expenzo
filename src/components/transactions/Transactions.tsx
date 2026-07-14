@@ -364,11 +364,23 @@ export const Transactions: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                currentTransactions.map((tx) => {
+                currentTransactions.map((tx, idx) => {
+                  const prevTx = idx > 0 ? currentTransactions[idx - 1] : null;
+                  const showDateHeader = !prevTx || prevTx.date.slice(0, 7) !== tx.date.slice(0, 7);
+                  const groupLabel = new Date(tx.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                   const isSelected = selectedTxIds.includes(tx.id);
                   return (
+                    <React.Fragment key={tx.id}>
+                    {showDateHeader && (
+                      <tr>
+                        <td colSpan={8} className="pt-5 pb-2 px-4">
+                          <span className="text-xs font-extrabold uppercase tracking-wider text-warm-muted dark:text-warm-dark-muted">
+                            {groupLabel}
+                          </span>
+                        </td>
+                      </tr>
+                    )}
                     <tr 
-                      key={tx.id} 
                       className={`hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors ${isSelected ? 'bg-warm-sage/5 dark:bg-warm-sage/10' : ''}`}
                     >
                       <td className="py-4 pl-6 pr-2">
@@ -437,6 +449,7 @@ export const Transactions: React.FC = () => {
                         </div>
                       </td>
                     </tr>
+                    </React.Fragment>
                   );
                 })
               )}
@@ -471,7 +484,7 @@ export const Transactions: React.FC = () => {
       {/* Add / Edit Transaction Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-lg w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-lg w-full max-h-[92vh] overflow-y-auto custom-scrollbar p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">
                 {modalMode === 'add' ? 'Add Transaction' : 'Edit Transaction'}
@@ -553,10 +566,14 @@ export const Transactions: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Date</label>
-                  <input 
-                    type="date" required value={formDate} onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
-                  />
+                  <div className="relative">
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-sage dark:text-warm-dark-sage pointer-events-none" />
+                    <input 
+                      type="date" required value={formDate} onChange={(e) => setFormDate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                      className="w-full p-3 pl-10 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
+                    />
+                  </div>
                 </div>
 
                 <div>
