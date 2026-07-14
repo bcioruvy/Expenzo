@@ -25,11 +25,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 px-6 sm:px-8 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md bg-white/80 dark:bg-[#0f172a]/80">
+    <header className="h-16 bg-white dark:bg-warm-dark-bg border-b border-warm-surface dark:border-warm-dark-surface px-6 sm:px-8 flex items-center justify-between z-30 sticky top-0 backdrop-blur-md bg-white/80 dark:bg-warm-dark-bg/80">
       
       {/* Title */}
       <div>
-        <h1 className="text-lg font-bold text-slate-800 dark:text-white tracking-tight capitalize">
+        <h1 className="text-lg font-bold text-warm-text dark:text-warm-dark-text tracking-tight capitalize">
           {tabTitles[activeTab] || activeTab}
         </h1>
       </div>
@@ -38,8 +38,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
       <div className="flex items-center space-x-4">
         
         {/* Date Indicator (matches the specific 2026 prompt base) */}
-        <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs font-medium text-slate-600 dark:text-slate-300">
-          <Calendar className="w-4 h-4 text-sky-500" />
+        <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-warm-surface dark:bg-warm-dark-card/80 border border-warm-surface dark:border-warm-dark-surface/60 text-xs font-medium text-warm-muted dark:text-warm-dark-muted">
+          <Calendar className="w-4 h-4 text-warm-sage" />
           <span>June 2026</span>
         </div>
 
@@ -48,37 +48,37 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           <button
             type="button"
             onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors relative group"
+            className="p-2.5 rounded-xl bg-warm-surface dark:bg-warm-dark-card/80 border border-warm-surface dark:border-warm-dark-surface/60 text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors relative group"
           >
             <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-rose-500 border-2 border-white dark:border-slate-800 rounded-full animate-pulse"></span>
+              <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-warm-terracotta border-2 border-white dark:border-warm-dark-surface rounded-full animate-pulse"></span>
             )}
           </button>
 
           {/* Notifications Dropdown */}
           {showNotificationDropdown && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl z-50 overflow-hidden py-2">
-              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-                <span className="font-bold text-sm text-slate-800 dark:text-white">Notifications</span>
-                <span className="text-xs bg-sky-500/10 text-sky-500 font-semibold px-2 py-0.5 rounded-full">{unreadCount} new</span>
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface shadow-2xl z-50 overflow-hidden py-2">
+              <div className="px-4 py-3 border-b border-warm-surface dark:border-warm-dark-surface/60 flex items-center justify-between">
+                <span className="font-bold text-sm text-warm-text dark:text-warm-dark-text">Notifications</span>
+                <span className="text-xs bg-warm-sage/10 text-warm-sage font-semibold px-2 py-0.5 rounded-full">{unreadCount} new</span>
               </div>
 
               <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/50 custom-scrollbar">
                 {notifications.length === 0 ? (
-                  <p className="text-center py-8 text-xs text-slate-500 dark:text-slate-400">No new notifications</p>
+                  <p className="text-center py-8 text-xs text-warm-muted dark:text-warm-dark-muted">No new notifications</p>
                 ) : (
                   notifications.map(n => (
-                    <div key={n.id} className={`p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 flex items-start space-x-3 ${!n.isRead ? 'bg-sky-500/5 dark:bg-sky-500/10' : ''}`}>
+                    <div key={n.id} className={`p-4 transition-colors hover:bg-warm-bg dark:hover:bg-warm-dark-surface/40 flex items-start space-x-3 ${!n.isRead ? 'bg-warm-sage/5 dark:bg-warm-sage/10' : ''}`}>
                       <div className="flex-1 space-y-1">
-                        <p className="text-xs font-bold text-slate-800 dark:text-white">{n.title}</p>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">{n.message}</p>
+                        <p className="text-xs font-bold text-warm-text dark:text-warm-dark-text">{n.title}</p>
+                        <p className="text-[11px] text-warm-muted dark:text-warm-dark-muted leading-relaxed">{n.message}</p>
                       </div>
                       {!n.isRead && (
                         <button
                           onClick={() => markNotificationAsRead(n.id)}
                           title="Mark as read"
-                          className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                          className="p-1 text-warm-dark-muted hover:text-warm-sage dark:text-warm-dark-sage hover:bg-warm-sage/10 rounded-lg transition-colors"
                         >
                           <Check className="w-4 h-4" />
                         </button>
@@ -88,11 +88,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 )}
               </div>
 
-              <div className="p-2 border-t border-slate-100 dark:border-slate-700/60 text-center">
+              <div className="p-2 border-t border-warm-surface dark:border-warm-dark-surface/60 text-center">
                 <button
                   type="button"
                   onClick={() => { setShowNotificationDropdown(false); setActiveTab('smart'); }}
-                  className="text-xs font-bold text-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors py-1"
+                  className="text-xs font-bold text-warm-sage hover:text-warm-sage dark:hover:text-warm-dark-sage transition-colors py-1"
                 >
                   View All Alerts & Insights
                 </button>
