@@ -16,6 +16,7 @@ import {
   X 
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY } from '../../utils/currency';
+import { EmptyState } from '../shared/EmptyState';
 
 export const Accounts: React.FC = () => {
   const { accounts, addAccount, editAccount, removeAccount, transferFunds, settings } = useFinance();
@@ -137,6 +138,17 @@ export const Accounts: React.FC = () => {
       </div>
 
       {/* Accounts Grid */}
+      {accounts.length === 0 ? (
+        <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60">
+          <EmptyState
+            icon={Wallet}
+            title="No accounts yet"
+            message="Add a bank account, cash wallet, or credit card so you can track which account each transaction comes from."
+            actionLabel="Add Account"
+            onAction={openAddModal}
+          />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {accounts.map(acc => {
           const Icon = getAccountIcon(acc.type);
@@ -195,6 +207,7 @@ export const Accounts: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* MODALS */}
       
