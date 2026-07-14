@@ -25,19 +25,20 @@ export const Analytics: React.FC = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' as const, labels: { color: '#94a3b8', font: { size: 12 }, boxWidth: 12 } },
+      legend: { position: 'top' as const, labels: { color: '#766F66', font: { size: 12 }, boxWidth: 12 } },
       tooltip: {
-        backgroundColor: '#1e293b',
-        titleColor: '#f8fafc',
-        bodyColor: '#e2e8f0',
+        backgroundColor: '#2D2A26',
+        titleColor: '#F4F0EA',
+        bodyColor: '#F4F0EA',
         padding: 12,
-        borderColor: '#334155',
+        borderColor: '#38342F',
         borderWidth: 1,
+        cornerRadius: 12,
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { color: '#64748b' } },
-      y: { grid: { color: '#334155' }, ticks: { color: '#64748b' } }
+      x: { grid: { display: false }, ticks: { color: '#766F66' } },
+      y: { grid: { color: '#E3DCCF' }, ticks: { color: '#766F66' } }
     }
   };
 
@@ -71,7 +72,7 @@ export const Analytics: React.FC = () => {
     labels: Object.keys(expenseSummaryByCategory),
     datasets: [{
       data: Object.values(expenseSummaryByCategory),
-      backgroundColor: ['#0284c7', '#a855f7', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'],
+      backgroundColor: ['#6E8B74', '#C98B6A', '#C7A86B', '#89A48E', '#D59B7B', '#D4B97C', '#A88F6E', '#8FA893'],
       borderWidth: 0
     }]
   };
@@ -119,12 +120,12 @@ export const Analytics: React.FC = () => {
       {
         label: 'Net Cash Flow',
         data: [3200, 2750, 2070, 3161],
-        borderColor: '#0284c7',
-        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+        borderColor: '#6E8B74',
+        backgroundColor: 'rgba(110, 139, 116, 0.12)',
         fill: true,
         tension: 0.3,
         borderWidth: 3,
-        pointBackgroundColor: '#0284c7'
+        pointBackgroundColor: '#6E8B74'
       }
     ]
   };
@@ -133,21 +134,21 @@ export const Analytics: React.FC = () => {
     <div className="space-y-8">
       
       {/* Analytics Toolbar & Filters */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Advanced Financial Analytics</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Extract powerful insights from your cash flow, spending trends, and net savings growth.</p>
+          <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Advanced Financial Analytics</h2>
+          <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">Extract powerful insights from your cash flow, spending trends, and net savings growth.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
           
           {/* Date Range Selection */}
-          <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <Calendar className="w-4 h-4 text-sky-500 ml-2" />
+          <div className="flex items-center space-x-2 bg-warm-bg dark:bg-warm-dark-bg p-1.5 rounded-2xl border border-warm-surface dark:border-warm-dark-surface">
+            <Calendar className="w-4 h-4 text-warm-sage ml-2" />
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="bg-transparent text-slate-800 dark:text-white text-xs font-bold focus:outline-none pr-2"
+              className="bg-transparent text-warm-text dark:text-warm-dark-text text-xs font-bold focus:outline-none pr-2"
             >
               <option value="1m">Last 30 Days</option>
               <option value="3m">Last 3 Months</option>
@@ -157,12 +158,12 @@ export const Analytics: React.FC = () => {
           </div>
 
           {/* Category Filter */}
-          <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <Filter className="w-4 h-4 text-purple-500 ml-2" />
+          <div className="flex items-center space-x-2 bg-warm-bg dark:bg-warm-dark-bg p-1.5 rounded-2xl border border-warm-surface dark:border-warm-dark-surface">
+            <Filter className="w-4 h-4 text-warm-gold ml-2" />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="bg-transparent text-slate-800 dark:text-white text-xs font-bold focus:outline-none pr-2"
+              className="bg-transparent text-warm-text dark:text-warm-dark-text text-xs font-bold focus:outline-none pr-2"
             >
               <option value="All">All Categories</option>
               <option value="Food & Dining">Food & Dining</option>
@@ -174,12 +175,12 @@ export const Analytics: React.FC = () => {
           </div>
 
           {/* Account Filter */}
-          <div className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <DollarSign className="w-4 h-4 text-emerald-500 ml-2" />
+          <div className="flex items-center space-x-2 bg-warm-bg dark:bg-warm-dark-bg p-1.5 rounded-2xl border border-warm-surface dark:border-warm-dark-surface">
+            <DollarSign className="w-4 h-4 text-warm-sage dark:text-warm-dark-sage ml-2" />
             <select
               value={filterAccount}
               onChange={(e) => setFilterAccount(e.target.value)}
-              className="bg-transparent text-slate-800 dark:text-white text-xs font-bold focus:outline-none pr-2"
+              className="bg-transparent text-warm-text dark:text-warm-dark-text text-xs font-bold focus:outline-none pr-2"
             >
               <option value="All">All Accounts</option>
               {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -193,13 +194,13 @@ export const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Monthly Comparison Bar Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Monthly Income & Expense Comparison</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Cash flow balanced overview</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Monthly Income & Expense Comparison</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Cash flow balanced overview</p>
             </div>
-            <BarChart2 className="w-5 h-5 text-sky-500" />
+            <BarChart2 className="w-5 h-5 text-warm-sage" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
             <Bar data={barData} options={baseChartOptions} />
@@ -207,13 +208,13 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Savings Growth Area Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Cumulative Savings Analysis</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Projected savings build-up over 6 months</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Cumulative Savings Analysis</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Projected savings build-up over 6 months</p>
             </div>
-            <Layers className="w-5 h-5 text-purple-500" />
+            <Layers className="w-5 h-5 text-warm-gold" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
             <Line data={areaData} options={baseChartOptions} />
@@ -221,13 +222,13 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Spending Category Analysis Pie Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Spending Breakdown by Category</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Proportional visual distribution</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Spending Breakdown by Category</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Proportional visual distribution</p>
             </div>
-            <PieIcon className="w-5 h-5 text-amber-500" />
+            <PieIcon className="w-5 h-5 text-warm-gold dark:text-warm-dark-gold" />
           </div>
           <div className="flex-1 min-h-[320px] w-full relative">
             <Pie data={pieData} options={pieOptions} />
@@ -235,13 +236,13 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Monthly Cash Flow Line Chart */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 shadow-xl shadow-slate-100 dark:shadow-none flex flex-col">
+        <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white tracking-tight">Weekly Net Cash Flow</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Real-time liquidity and wallet health</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Weekly Net Cash Flow</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Real-time liquidity and wallet health</p>
             </div>
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <TrendingUp className="w-5 h-5 text-warm-sage dark:text-warm-dark-sage" />
           </div>
           <div className="flex-1 min-h-[320px] w-full">
             <Line data={cashFlowLineData} options={baseChartOptions} />
