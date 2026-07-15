@@ -21,6 +21,7 @@ interface FinanceContextType {
   notifications: AppNotification[];
   settings: UserSettings;
   loading: boolean;
+  initialLoadComplete: boolean;
   dataLoadError: boolean;
   dataLoadErrorDetails: string[];
   // Computed stats
@@ -30,12 +31,15 @@ interface FinanceContextType {
   savingsThisMonth: number;
   budgetUsagePercent: number;
   financialHealthScore: number;
+  balanceChangePercent: number | null;
+  topIncomeSources: string;
   smartInsights: SmartInsight[];
   upcomingBills: BillReminder[];
   // Actions
   addTransaction: (tx: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
   editTransaction: (tx: Transaction) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
+  removeMultipleTransactions: (ids: string[]) => Promise<void>;
   addAccount: (acc: Omit<Account, 'id' | 'userId'>) => Promise<void>;
   editAccount: (acc: Account) => Promise<void>;
   removeAccount: (id: string) => Promise<void>;
@@ -64,6 +68,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     userId: '', currency: 'PKR', language: 'English', theme: 'light', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [dataLoadError, setDataLoadError] = useState(false);
   const [dataLoadErrorDetails, setDataLoadErrorDetails] = useState<string[]>([]);
 
@@ -109,6 +114,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setDataLoadError(true);
     } finally {
       setLoading(false);
+      setInitialLoadComplete(true);
     }
   }, [user]);
 
@@ -146,6 +152,33 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     .reduce((sum, t) => sum + t.amount, 0);
 
   const savingsThisMonth = monthlyIncome - monthlyExpenses;
+
+  // Previous month's net (income - expenses), used to show a genuine month-over-month
+  // change on the Current Balance card instead of a fixed placeholder percentage.
+  const prevMonthDate = new Date(currentMonthPrefix + '-01T00:00:00');
+  prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
+  const prevMonthPrefix = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+  const prevMonthIncome = transactions
+    .filter(t => t.type === 'Income' && t.date.startsWith(prevMonthPrefix))
+    .reduce((sum, t) => sum + t.amount, 0);
+  const prevMonthExpenses = transactions
+    .filter(t => t.type === 'Expense' && t.date.startsWith(prevMonthPrefix))
+    .reduce((sum, t) => sum + t.amount, 0);
+  const prevMonthNet = prevMonthIncome - prevMonthExpenses;
+  const balanceChangePercent = prevMonthNet !== 0
+    ? Math.round(((savingsThisMonth - prevMonthNet) / Math.abs(prevMonthNet)) * 100)
+    : null; // null when there's no prior-month data to compare against
+
+  // Top income category label for this month, e.g. "Salary" or "Salary + Freelance"
+  const incomeByCategory: Record<string, number> = {};
+  transactions
+    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix))
+    .forEach(t => { incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount; });
+  const topIncomeSources = Object.entries(incomeByCategory)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([cat]) => cat)
+    .join(' + ');
 
   const totalMonthlyBudget = budgets
     .filter(b => b.type === 'Monthly Budget')
@@ -264,6 +297,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await fetchData(); // refresh balances
   };
 
+  // Deletes multiple transactions, then refreshes balances exactly once at the end.
+  // Deleting one-by-one with a refetch after each caused a race condition where
+  // in-flight refetches could overwrite state mid-loop, sometimes skipping or
+  // mismatching which transaction actually got removed.
+  const removeMultipleTransactions = async (ids: string[]) => {
+    if (!user || ids.length === 0) return;
+    await Promise.all(ids.map(id => dbDeleteTransaction(id)));
+    setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
+    await fetchData(); // refresh balances once, after all deletes have completed
+  };
+
   const addAccount = async (acc: Omit<Account, 'id' | 'userId'>) => {
     if (!user) return;
     const newAcc = await dbSaveAccount({ ...acc, id: '', userId: user.uid });
@@ -369,10 +413,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading, dataLoadError, dataLoadErrorDetails,
+      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails,
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
-      financialHealthScore, smartInsights, upcomingBills,
-      addTransaction, editTransaction, removeTransaction, addAccount, editAccount, removeAccount,
+      financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
+      addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
       transferFunds, addBudget, editBudget, removeBudget, addGoal, editGoal, removeGoal,
       markNotificationAsRead, updateSettings, refreshData
     }}>
