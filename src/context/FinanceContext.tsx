@@ -22,6 +22,7 @@ interface FinanceContextType {
   settings: UserSettings;
   loading: boolean;
   dataLoadError: boolean;
+  dataLoadErrorDetails: string[];
   // Computed stats
   currentBalance: number;
   monthlyIncome: number;
@@ -64,6 +65,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
   const [loading, setLoading] = useState(true);
   const [dataLoadError, setDataLoadError] = useState(false);
+  const [dataLoadErrorDetails, setDataLoadErrorDetails] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -79,33 +81,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ]);
 
       const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes] = results;
+      const errors: string[] = [];
 
       if (accsRes.status === 'fulfilled') setAccounts(accsRes.value);
-      else console.error('Failed to load accounts:', accsRes.reason);
+      else { console.error('Failed to load accounts:', accsRes.reason); errors.push(`Accounts: ${accsRes.reason?.message || accsRes.reason}`); }
 
       if (txsRes.status === 'fulfilled') setTransactions(txsRes.value);
-      else console.error('Failed to load transactions:', txsRes.reason);
+      else { console.error('Failed to load transactions:', txsRes.reason); errors.push(`Transactions: ${txsRes.reason?.message || txsRes.reason}`); }
 
       if (bdgsRes.status === 'fulfilled') setBudgets(bdgsRes.value);
-      else console.error('Failed to load budgets:', bdgsRes.reason);
+      else { console.error('Failed to load budgets:', bdgsRes.reason); errors.push(`Budgets: ${bdgsRes.reason?.message || bdgsRes.reason}`); }
 
       if (glsRes.status === 'fulfilled') setGoals(glsRes.value);
-      else console.error('Failed to load goals:', glsRes.reason);
+      else { console.error('Failed to load goals:', glsRes.reason); errors.push(`Goals: ${glsRes.reason?.message || glsRes.reason}`); }
 
       if (notifsRes.status === 'fulfilled') setNotifications(notifsRes.value);
-      else console.error('Failed to load notifications:', notifsRes.reason);
+      else { console.error('Failed to load notifications:', notifsRes.reason); errors.push(`Notifications: ${notifsRes.reason?.message || notifsRes.reason}`); }
 
       if (setsRes.status === 'fulfilled') setSettings(setsRes.value);
-      else console.error('Failed to load settings:', setsRes.reason);
+      else { console.error('Failed to load settings:', setsRes.reason); errors.push(`Settings: ${setsRes.reason?.message || setsRes.reason}`); }
 
-      const anyFailed = results.some(r => r.status === 'rejected');
-      if (anyFailed) {
-        setDataLoadError(true);
-      } else {
-        setDataLoadError(false);
-      }
-    } catch (err) {
+      setDataLoadErrorDetails(errors);
+      setDataLoadError(errors.length > 0);
+    } catch (err: any) {
       console.error("Unexpected error fetching finance data:", err);
+      setDataLoadErrorDetails([err?.message || String(err)]);
       setDataLoadError(true);
     } finally {
       setLoading(false);
@@ -369,7 +369,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading, dataLoadError,
+      accounts, transactions, budgets, goals, notifications, settings, loading, dataLoadError, dataLoadErrorDetails,
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, addAccount, editAccount, removeAccount,
