@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { Menu } from 'lucide-react';
+import { Menu, Wallet } from 'lucide-react';
+import { useFinance } from '../../context/FinanceContext';
 
 interface LayoutProps {
   activeTab: string;
@@ -11,6 +12,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { initialLoadComplete } = useFinance();
 
   return (
     <div className="flex h-screen bg-warm-bg dark:bg-warm-dark-bg overflow-hidden">
@@ -56,7 +58,21 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto page-transition-enter-active">
-            {children}
+            {!initialLoadComplete ? (
+              <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-warm-sage/10 dark:bg-warm-dark-sage/15 border border-warm-sage/30 dark:border-warm-dark-sage/30 flex items-center justify-center animate-pulse">
+                  <Wallet className="w-7 h-7 text-warm-sage dark:text-warm-dark-sage" />
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-warm-sage dark:bg-warm-dark-sage animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-warm-sage dark:bg-warm-dark-sage animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-warm-sage dark:bg-warm-dark-sage animate-bounce"></span>
+                </div>
+                <p className="text-sm font-medium text-warm-muted dark:text-warm-dark-muted tracking-wide">Loading your household finances...</p>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
 
