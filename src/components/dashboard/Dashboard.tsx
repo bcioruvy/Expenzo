@@ -68,7 +68,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     transferFunds,
     addBudget,
     settings,
-    dataLoadError
+    dataLoadError,
+    dataLoadErrorDetails
   } = useFinance();
 
   // Modals state
@@ -252,9 +253,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       {dataLoadError && (
         <div className="p-4 rounded-2xl bg-warm-terracotta/10 border border-warm-terracotta/30 flex items-start space-x-3">
           <AlertTriangle className="w-5 h-5 text-warm-terracotta dark:text-warm-dark-terracotta flex-shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-warm-terracotta dark:text-warm-dark-terracotta">Some of your data couldn't be loaded</p>
             <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-0.5">This is usually temporary — try refreshing the page. If it keeps happening, check your internet connection or Firestore setup.</p>
+            {dataLoadErrorDetails.length > 0 && (
+              <div className="mt-2 p-2 rounded-lg bg-warm-terracotta/5 border border-warm-terracotta/20 space-y-1">
+                {dataLoadErrorDetails.map((msg, i) => (
+                  <p key={i} className="text-[10px] font-mono text-warm-terracotta dark:text-warm-dark-terracotta break-words">{msg}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
