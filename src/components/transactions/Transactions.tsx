@@ -22,7 +22,7 @@ import {
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 export const Transactions: React.FC = () => {
-  const { transactions, accounts, addTransaction, editTransaction, removeTransaction, settings } = useFinance();
+  const { transactions, accounts, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings } = useFinance();
 
   // Filters & Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,9 +118,7 @@ export const Transactions: React.FC = () => {
   // Bulk Delete Action
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedTxIds.length} transactions?`)) return;
-    for (const id of selectedTxIds) {
-      await removeTransaction(id);
-    }
+    await removeMultipleTransactions(selectedTxIds);
     setSelectedTxIds([]);
   };
 
