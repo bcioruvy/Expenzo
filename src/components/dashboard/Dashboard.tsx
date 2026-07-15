@@ -69,7 +69,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     addBudget,
     settings,
     dataLoadError,
-    dataLoadErrorDetails
+    dataLoadErrorDetails,
+    balanceChangePercent,
+    topIncomeSources
   } = useFinance();
 
   // Modals state
@@ -280,10 +282,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           </div>
           <div className="mt-4">
             <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(currentBalance, settings.currency)}</h3>
-            <p className="text-xs text-warm-sage dark:text-warm-dark-sage mt-1 font-medium flex items-center space-x-1">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+3.4% from last month</span>
-            </p>
+            {balanceChangePercent !== null ? (
+              <p className={`text-xs mt-1 font-medium flex items-center space-x-1 ${balanceChangePercent >= 0 ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
+                {balanceChangePercent >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                <span>{balanceChangePercent >= 0 ? '+' : ''}{balanceChangePercent}% from last month</span>
+              </p>
+            ) : (
+              <p className="text-xs mt-1 font-medium text-warm-muted dark:text-warm-dark-muted">No prior month to compare yet</p>
+            )}
           </div>
         </div>
 
@@ -298,7 +304,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
           <div className="mt-4">
             <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(monthlyIncome, settings.currency)}</h3>
             <p className="text-xs text-warm-sage dark:text-warm-dark-sage mt-1 font-medium flex items-center space-x-1">
-              <span>Primary Salary + Freelance</span>
+              <span>{topIncomeSources || 'No income logged this month'}</span>
             </p>
           </div>
         </div>
