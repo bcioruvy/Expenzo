@@ -13,15 +13,22 @@ import {
   limit,
   addDoc
 } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from './config';
+import { db, isFirebaseConfigured, firebaseInitError } from './config';
 import { Transaction, Account, Budget, Goal, AppNotification, UserSettings, ReportSummary } from '../types';
+
+// True only when real-looking Firebase credentials were provided but initialization
+// genuinely failed — as opposed to isFirebaseConfigured being false because no
+// credentials were provided at all (intentional local simulation mode, not an error).
+// The app should surface this loudly rather than silently serving fake demo data
+// while appearing to work normally.
+export const isServingMockDataUnintentionally = isFirebaseConfigured && !!firebaseInitError;
 
 // ==========================================
 // INITIAL MOCK DATA FOR SIMULATION MODE
 // ==========================================
 let mockAccounts: Account[] = [
-  { id: 'acc-1', userId: 'mock-user-123', name: 'Primary Salary Account', type: 'Bank Account', balance: 5420.50, currency: 'PKR', isDefault: true, color: '#0284c7' },
-  { id: 'acc-2', userId: 'mock-user-123', name: 'Emergency Savings', type: 'Savings Account', balance: 12500.00, currency: 'PKR', color: '#10b981' },
+  { id: 'acc-1', userId: 'mock-user-123', name: 'Primary Salary Account', type: 'Bank Account', balance: 5420.50, currency: 'PKR', isDefault: true, color: '#6E8B74' },
+  { id: 'acc-2', userId: 'mock-user-123', name: 'Emergency Savings', type: 'Savings Account', balance: 12500.00, currency: 'PKR', color: '#89A48E' },
   { id: 'acc-3', userId: 'mock-user-123', name: 'Daily Spending Wallet', type: 'Wallet', balance: 450.00, currency: 'PKR', color: '#f59e0b' },
   { id: 'acc-4', userId: 'mock-user-123', name: 'Platinum Credit Card', type: 'Credit Card', balance: -1240.20, currency: 'PKR', color: '#ef4444' },
   { id: 'acc-5', userId: 'mock-user-123', name: 'Pocket Cash', type: 'Cash', balance: 180.00, currency: 'PKR', color: '#8b5cf6' },
@@ -51,8 +58,8 @@ let mockBudgets: Budget[] = [
 ];
 
 let mockGoals: Goal[] = [
-  { id: 'g-1', userId: 'mock-user-123', name: 'Emergency Fund', targetAmount: 20000, currentAmount: 12500, deadline: '2026-12-31', category: 'Savings', notes: '6 months of living expenses buffer', color: '#10b981' },
-  { id: 'g-2', userId: 'mock-user-123', name: 'House Deposit', targetAmount: 50000, currentAmount: 28000, deadline: '2028-06-30', category: 'Real Estate', notes: 'Down payment for suburban home', color: '#0284c7' },
+  { id: 'g-1', userId: 'mock-user-123', name: 'Emergency Fund', targetAmount: 20000, currentAmount: 12500, deadline: '2026-12-31', category: 'Savings', notes: '6 months of living expenses buffer', color: '#89A48E' },
+  { id: 'g-2', userId: 'mock-user-123', name: 'House Deposit', targetAmount: 50000, currentAmount: 28000, deadline: '2028-06-30', category: 'Real Estate', notes: 'Down payment for suburban home', color: '#6E8B74' },
   { id: 'g-3', userId: 'mock-user-123', name: 'New iPhone Pro', targetAmount: 1200, currentAmount: 850, deadline: '2026-09-15', category: 'Tech', notes: 'Special tech upgrade fund', color: '#a855f7' },
   { id: 'g-4', userId: 'mock-user-123', name: 'Japan Trip 2027', targetAmount: 5000, currentAmount: 2100, deadline: '2027-04-10', category: 'Travel', notes: 'Spring cherry blossom vacation', color: '#f59e0b' },
 ];
