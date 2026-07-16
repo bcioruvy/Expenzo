@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Eye, EyeOff, Lock, Mail, User, Shield, ArrowRight, Check } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, ArrowRight, Check } from 'lucide-react';
+import { LogoMark } from '../shared/LogoMark';
 
 export const AuthScreen: React.FC = () => {
   const { signIn, signUp, signInGoogle, resetPass } = useAuth();
@@ -116,8 +117,8 @@ export const AuthScreen: React.FC = () => {
         
         {/* Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-warm-sage to-warm-dark-sage shadow-lg shadow-warm/30 mb-3">
-            <Shield className="w-6 h-6 text-white" />
+          <div className="inline-flex items-center justify-center mb-3">
+            <LogoMark size={56} />
           </div>
           <h2 className="text-2xl font-bold text-warm-text dark:text-warm-dark-text tracking-tight">
             {showForgotPassword ? 'Reset Password' : activeTab === 'signin' ? 'Welcome Back' : 'Create Account'}
