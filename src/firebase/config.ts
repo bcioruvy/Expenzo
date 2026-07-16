@@ -8,19 +8,20 @@ import { getFirestore } from 'firebase/firestore';
 /**
  * FIREBASE CONFIGURATION
  * ----------------------
- * Replace the placeholder values below with your actual Firebase project credentials.
- * You can find these in your Firebase Console under Project Settings > General > Your Apps.
- * 
- * NOTE: Until you replace these placeholders, the application operates in a fully featured
+ * Credentials are read from environment variables (see .env.example) instead of being
+ * committed directly to source. Copy .env.example to .env and fill in your Firebase
+ * project's values — find them in Firebase Console under Project Settings > General > Your Apps.
+ *
+ * NOTE: Until real values are provided, the application operates in a fully featured
  * local simulation mode so you can test and preview all functionality instantly!
  */
 export const firebaseConfig = {
-  apiKey: "AIzaSyDHlrHJNsDl5oBqVHLuIl-LOfi4gCMQsu0",
-  authDomain: "expenzo-c9ab0.firebaseapp.com",
-  projectId: "expenzo-c9ab0",
-  storageBucket: "expenzo-c9ab0.firebasestorage.app",
-  messagingSenderId: "625037762919",
-  appId: "1:625037762919:web:32bd15760f8a205e58cfc2"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID"
 };
 
 // Check if the user has replaced the placeholder credentials
@@ -30,13 +31,21 @@ let app: any = null;
 let auth: any = null;
 let db: any = null;
 
+// Tracks whether Firebase actually initialized successfully — distinct from
+// isFirebaseConfigured, which only checks that credentials look present.
+// Previously, if initializeApp() threw despite real-looking credentials, the app
+// would silently fall through to serving fake mock data with no visible warning
+// that anything had gone wrong.
+export let firebaseInitError: string | null = null;
+
 if (isFirebaseConfigured) {
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Firebase initialization error:", error);
+    firebaseInitError = error?.message || String(error);
   }
 }
 
