@@ -15,7 +15,7 @@ import {
   Check, 
   X 
 } from 'lucide-react';
-import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY } from '../../utils/currency';
+import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY, CURRENCY_OPTIONS } from '../../utils/currency';
 import { EmptyState } from '../shared/EmptyState';
 
 export const Accounts: React.FC = () => {
@@ -256,10 +256,14 @@ export const Accounts: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Currency</label>
-                  <input 
-                    type="text" required value={accCurrency} onChange={(e) => setAccCurrency(e.target.value)}
-                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-sm" 
-                  />
+                  <select 
+                    required value={accCurrency} onChange={(e) => setAccCurrency(e.target.value)}
+                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-sm"
+                  >
+                    {CURRENCY_OPTIONS.map(c => (
+                      <option key={c.code} value={c.code}>{c.code}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Accent Color</label>
