@@ -18,6 +18,7 @@ import {
   Zap,
   Wallet
 } from 'lucide-react';
+import { LogoMark } from '../shared/LogoMark';
 
 interface SidebarProps {
   activeTab: string;
@@ -50,16 +51,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
       <div className="flex items-center justify-between p-4 border-b border-warm-surface dark:border-warm-dark-surface h-16">
         {!isCollapsed && (
           <div className="flex items-center space-x-3 overflow-hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-warm-sage to-warm-dark-sage flex items-center justify-center shadow-md shadow-warm/20 flex-shrink-0">
-              <span className="text-white font-bold text-lg">E</span>
-            </div>
+            <LogoMark size={40} />
             <span className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight truncate">Expenzo</span>
           </div>
         )}
         {isCollapsed && (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-warm-sage to-warm-dark-sage flex items-center justify-center shadow-md shadow-warm/20 mx-auto">
-            <span className="text-white font-bold text-lg">E</span>
-          </div>
+          <LogoMark size={40} className="mx-auto" />
         )}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
