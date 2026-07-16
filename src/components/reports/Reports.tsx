@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { 
   FileText, 
-  Download, 
   FileSpreadsheet, 
   Calendar, 
   TrendingUp, 
@@ -12,12 +11,25 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import { getBudgetSpentAmount, getReferenceDate } from '../../utils/chartData';
 
 export const Reports: React.FC = () => {
   const { transactions, budgets, goals, monthlyIncome, monthlyExpenses, savingsThisMonth, settings } = useFinance();
 
   const [selectedReport, setSelectedReport] = useState<'monthly' | 'income' | 'expense' | 'budget' | 'savings'>('monthly');
   const [reportMonth, setReportMonth] = useState(() => new Date().toISOString().slice(0, 7));
+
+  // Transactions actually filtered to the selected report month — previously
+  // reportMonth was only used to name the downloaded file, so exporting "May 2026"
+  // dumped every transaction regardless of the month picker.
+  const monthTransactions = React.useMemo(
+    () => transactions.filter(t => t.date.startsWith(reportMonth)),
+    [transactions, reportMonth]
+  );
+  const monthIncomeTotal = monthTransactions.filter(t => t.type === 'Income').reduce((s, t) => s + t.amount, 0);
+  const monthExpenseTotal = monthTransactions.filter(t => t.type === 'Expense').reduce((s, t) => s + t.amount, 0);
+  const monthSavings = monthIncomeTotal - monthExpenseTotal;
+  const referenceDate = React.useMemo(() => new Date(reportMonth + '-15T00:00:00'), [reportMonth]);
 
   // Export handlers
   const handleExportCSV = (reportTitle: string) => {
@@ -26,19 +38,20 @@ export const Reports: React.FC = () => {
 
     if (selectedReport === 'income') {
       headers = ['Type', 'Category', 'Amount', 'Date', 'Account', 'Notes'];
-      rows = transactions.filter(t => t.type === 'Income').map(t => 
+      rows = monthTransactions.filter(t => t.type === 'Income').map(t => 
         `"${t.type}","${t.category}",${t.amount},"${t.date}","${t.accountName}","${t.notes}"`
       );
     } else if (selectedReport === 'expense') {
       headers = ['Type', 'Category', 'Amount', 'Date', 'Account', 'Notes'];
-      rows = transactions.filter(t => t.type === 'Expense').map(t => 
+      rows = monthTransactions.filter(t => t.type === 'Expense').map(t => 
         `"${t.type}","${t.category}",${t.amount},"${t.date}","${t.accountName}","${t.notes}"`
       );
     } else if (selectedReport === 'budget') {
       headers = ['Budget Name', 'Type', 'Target Amount', 'Spent Amount', 'Status'];
-      rows = budgets.map(b => 
-        `"${b.name}","${b.type}",${b.targetAmount},${b.spentAmount},"${b.spentAmount > b.targetAmount ? 'Over Budget' : 'On Track'}"`
-      );
+      rows = budgets.map(b => {
+        const spent = getBudgetSpentAmount(b, transactions, referenceDate);
+        return `"${b.name}","${b.type}",${b.targetAmount},${spent},"${spent > b.targetAmount ? 'Over Budget' : 'On Track'}"`;
+      });
     } else if (selectedReport === 'savings') {
       headers = ['Goal Name', 'Category', 'Target Amount', 'Current Saved', 'Deadline'];
       rows = goals.map(g => 
@@ -47,9 +60,9 @@ export const Reports: React.FC = () => {
     } else {
       headers = ['Metric', 'Amount'];
       rows = [
-        `"Total Monthly Income",${monthlyIncome}`,
-        `"Total Monthly Expenses",${monthlyExpenses}`,
-        `"Net Savings This Month",${savingsThisMonth}`
+        `"Total Monthly Income",${monthIncomeTotal}`,
+        `"Total Monthly Expenses",${monthExpenseTotal}`,
+        `"Net Savings This Month",${monthSavings}`
       ];
     }
 
@@ -61,11 +74,6 @@ export const Reports: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleExportExcel = (reportTitle: string) => {
-    // Simulate Excel download via tab-separated values or similar
-    handleExportCSV(reportTitle);
   };
 
   const handleExportPDF = () => {
@@ -148,15 +156,8 @@ export const Reports: React.FC = () => {
               onClick={() => handleExportCSV(currentConfig.label)}
               className="px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-xs flex items-center space-x-2 transition-colors shadow-sm"
             >
-              <Download className="w-4 h-4 text-warm-sage dark:text-warm-dark-sage" />
-              <span>CSV</span>
-            </button>
-            <button
-              onClick={() => handleExportExcel(currentConfig.label)}
-              className="px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-xs flex items-center space-x-2 transition-colors shadow-sm"
-            >
               <FileSpreadsheet className="w-4 h-4 text-warm-sage dark:text-warm-dark-sage" />
-              <span>Excel</span>
+              <span>Download CSV</span>
             </button>
             <button
               onClick={handleExportPDF}
@@ -164,6 +165,7 @@ export const Reports: React.FC = () => {
             >
               <FileText className="w-4 h-4" />
               <span>Download PDF</span>
+
             </button>
           </div>
         </div>
@@ -174,16 +176,16 @@ export const Reports: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="p-6 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface">
                 <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted">Total Income</span>
-                <p className="text-2xl font-extrabold text-warm-sage dark:text-warm-dark-sage mt-2">{formatCurrency(monthlyIncome, settings.currency)}</p>
+                <p className="text-2xl font-extrabold text-warm-sage dark:text-warm-dark-sage mt-2">{formatCurrency(monthIncomeTotal, settings.currency)}</p>
               </div>
               <div className="p-6 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface">
                 <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted">Total Expenses</span>
-                <p className="text-2xl font-extrabold text-warm-terracotta dark:text-warm-dark-terracotta mt-2">{formatCurrency(monthlyExpenses, settings.currency)}</p>
+                <p className="text-2xl font-extrabold text-warm-terracotta dark:text-warm-dark-terracotta mt-2">{formatCurrency(monthExpenseTotal, settings.currency)}</p>
               </div>
               <div className="p-6 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface">
                 <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted">Net Savings Margin</span>
-                <p className={`text-2xl font-extrabold mt-2 ${savingsThisMonth >= 0 ? 'text-warm-gold' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
-                  {formatCurrency(savingsThisMonth, settings.currency)}
+                <p className={`text-2xl font-extrabold mt-2 ${monthSavings >= 0 ? 'text-warm-gold' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
+                  {formatCurrency(monthSavings, settings.currency)}
                 </p>
               </div>
             </div>
@@ -199,7 +201,7 @@ export const Reports: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 text-sm font-medium text-warm-text dark:text-warm-dark-muted">
-                  {transactions.slice(0, 15).map(tx => (
+                  {monthTransactions.slice(0, 15).map(tx => (
                     <tr key={tx.id} className="hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors">
                       <td className="py-4 px-6">
                         <p className="font-bold text-warm-text dark:text-warm-dark-text">{tx.category}</p>
@@ -235,7 +237,7 @@ export const Reports: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 text-sm font-medium text-warm-text dark:text-warm-dark-muted">
-                {transactions.filter(t => t.type === 'Income').map(tx => (
+                {monthTransactions.filter(t => t.type === 'Income').map(tx => (
                   <tr key={tx.id} className="hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors">
                     <td className="py-4 px-6">
                       <p className="font-bold text-warm-text dark:text-warm-dark-text">{tx.category}</p>
@@ -265,7 +267,7 @@ export const Reports: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 text-sm font-medium text-warm-text dark:text-warm-dark-muted">
-                {transactions.filter(t => t.type === 'Expense').map(tx => (
+                {monthTransactions.filter(t => t.type === 'Expense').map(tx => (
                   <tr key={tx.id} className="hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors">
                     <td className="py-4 px-6">
                       <p className="font-bold text-warm-text dark:text-warm-dark-text">{tx.category}</p>
@@ -295,19 +297,22 @@ export const Reports: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 text-sm font-medium text-warm-text dark:text-warm-dark-muted">
-                {budgets.map(bg => (
+                {budgets.map(bg => {
+                  const liveSpent = getBudgetSpentAmount(bg, transactions, referenceDate);
+                  return (
                   <tr key={bg.id} className="hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors">
                     <td className="py-4 px-6 font-bold text-warm-text dark:text-warm-dark-text">{bg.name}</td>
                     <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{bg.type}</td>
                     <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(bg.targetAmount, settings.currency)}</td>
-                    <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(bg.spentAmount, settings.currency)}</td>
+                    <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(liveSpent, settings.currency)}</td>
                     <td className="py-4 px-6 text-right">
-                      <span className={`px-2.5 py-1 rounded-xl text-xs font-bold inline-block ${bg.spentAmount > bg.targetAmount ? 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta' : 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage'}`}>
-                        {bg.spentAmount > bg.targetAmount ? 'Exceeded' : 'Optimal'}
+                      <span className={`px-2.5 py-1 rounded-xl text-xs font-bold inline-block ${liveSpent > bg.targetAmount ? 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta' : 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage'}`}>
+                        {liveSpent > bg.targetAmount ? 'Exceeded' : 'Optimal'}
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
