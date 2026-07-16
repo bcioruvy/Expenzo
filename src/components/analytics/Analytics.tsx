@@ -11,7 +11,7 @@ import {
   BarChart2, 
   Layers 
 } from 'lucide-react';
-import { getMonthlyIncomeExpense, getCumulativeSavings, getWeeklyCashFlow } from '../../utils/chartData';
+import { getMonthlyIncomeExpense, getCumulativeSavings, getWeeklyCashFlow, getReferenceDate } from '../../utils/chartData';
 import { EmptyState } from '../shared/EmptyState';
 
 export const Analytics: React.FC = () => {
@@ -53,6 +53,14 @@ export const Analytics: React.FC = () => {
   };
 
   // Prepare filtered transactions for analytics
+  // Maps the Date Range selector to an actual number of months/weeks of history to show,
+  // instead of the selector just sitting there disconnected from every chart.
+  const dateRangeMonths: Record<string, number> = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 };
+  const monthsWindow = dateRangeMonths[dateRange] || 6;
+  const weeksWindow = dateRange === '1m' ? 4 : dateRange === '3m' ? 12 : dateRange === '1y' ? 52 : 24;
+
+  const referenceDate = useMemo(() => getReferenceDate(transactions), [transactions]);
+
   const filteredTxs = useMemo(() => {
     let list = [...transactions];
     if (filterCategory !== 'All') {
@@ -61,8 +69,13 @@ export const Analytics: React.FC = () => {
     if (filterAccount !== 'All') {
       list = list.filter(t => t.accountId === filterAccount);
     }
+    // Apply the selected date range — cuts off transactions older than the window,
+    // anchored to the same reference date the charts use (not the raw device clock).
+    const cutoff = new Date(referenceDate);
+    cutoff.setMonth(cutoff.getMonth() - monthsWindow);
+    list = list.filter(t => new Date(t.date + 'T00:00:00') >= cutoff);
     return list;
-  }, [transactions, filterCategory, filterAccount]);
+  }, [transactions, filterCategory, filterAccount, monthsWindow, referenceDate]);
 
   // Calculations for charts
   const expenseSummaryByCategory: Record<string, number> = {};
@@ -79,8 +92,18 @@ export const Analytics: React.FC = () => {
     }]
   };
 
+  // Category/account-filtered but NOT date-cutoff transactions — cumulative savings
+  // needs the full history to build an accurate running total; only the number of
+  // months displayed should change with the date range, not the starting balance.
+  const categoryAccountFilteredTxs = useMemo(() => {
+    let list = [...transactions];
+    if (filterCategory !== 'All') list = list.filter(t => t.category === filterCategory);
+    if (filterAccount !== 'All') list = list.filter(t => t.accountId === filterAccount);
+    return list;
+  }, [transactions, filterCategory, filterAccount]);
+
   // Monthly Comparison Bar Chart Data — computed from real transactions
-  const { labels: monthLabels, income: monthlyIncomeSeries, expenses: monthlyExpenseSeries } = getMonthlyIncomeExpense(filteredTxs, 6);
+  const { labels: monthLabels, income: monthlyIncomeSeries, expenses: monthlyExpenseSeries } = getMonthlyIncomeExpense(filteredTxs, monthsWindow, referenceDate);
   const hasMonthlyData = monthlyIncomeSeries.some(v => v > 0) || monthlyExpenseSeries.some(v => v > 0);
   const barData = {
     labels: monthLabels,
@@ -101,7 +124,7 @@ export const Analytics: React.FC = () => {
   };
 
   // Savings Analysis Area Chart Data — cumulative real net savings
-  const { labels: savingsLabels, cumulative } = getCumulativeSavings(filteredTxs, 6);
+  const { labels: savingsLabels, cumulative } = getCumulativeSavings(categoryAccountFilteredTxs, monthsWindow, referenceDate);
   const hasSavingsData = cumulative.some(v => v !== 0);
   const areaData = {
     labels: savingsLabels,
@@ -120,7 +143,7 @@ export const Analytics: React.FC = () => {
   };
 
   // Cash Flow Line Chart Data — real net flow per week
-  const { labels: cashFlowLabels, netFlow } = getWeeklyCashFlow(filteredTxs, 4);
+  const { labels: cashFlowLabels, netFlow } = getWeeklyCashFlow(filteredTxs, Math.min(weeksWindow, 12), referenceDate);
   const hasCashFlowData = netFlow.some(v => v !== 0);
   const cashFlowLineData = {
     labels: cashFlowLabels,
