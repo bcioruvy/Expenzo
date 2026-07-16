@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Menu, Wallet } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
+import { LogoMark } from '../shared/LogoMark';
 
 interface LayoutProps {
   activeTab: string;
@@ -46,7 +47,10 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight">Expenzo</span>
+          <div className="flex items-center space-x-2">
+            <LogoMark size={28} />
+            <span className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight">Expenzo</span>
+          </div>
           <div className="w-6"></div> {/* Spacer for centering */}
         </div>
 
