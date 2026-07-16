@@ -292,9 +292,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeTransaction = async (id: string) => {
     if (!user) return;
-    await dbDeleteTransaction(id);
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    await fetchData(); // refresh balances
+    try {
+      await dbDeleteTransaction(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      await fetchData(); // refresh balances
+    } catch (err: any) {
+      console.error('Failed to delete transaction:', err);
+      alert(`Couldn't delete transaction:\n${err?.message || err}`);
+    }
   };
 
   // Deletes multiple transactions, then refreshes balances exactly once at the end.
@@ -303,9 +308,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // mismatching which transaction actually got removed.
   const removeMultipleTransactions = async (ids: string[]) => {
     if (!user || ids.length === 0) return;
-    await Promise.all(ids.map(id => dbDeleteTransaction(id)));
-    setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-    await fetchData(); // refresh balances once, after all deletes have completed
+    try {
+      await Promise.all(ids.map(id => dbDeleteTransaction(id)));
+      setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
+      await fetchData(); // refresh balances once, after all deletes have completed
+    } catch (err: any) {
+      console.error('Failed to delete transactions:', err);
+      alert(`Couldn't delete the selected transactions:\n${err?.message || err}`);
+    }
   };
 
   const addAccount = async (acc: Omit<Account, 'id' | 'userId'>) => {
@@ -322,8 +332,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeAccount = async (id: string) => {
     if (!user) return;
-    await dbDeleteAccount(id);
-    setAccounts(prev => prev.filter(a => a.id !== id));
+    try {
+      await dbDeleteAccount(id);
+      setAccounts(prev => prev.filter(a => a.id !== id));
+    } catch (err: any) {
+      console.error('Failed to delete account:', err);
+      alert(`Couldn't delete account:\n${err?.message || err}`);
+    }
   };
 
   const transferFunds = async (fromAccId: string, toAccId: string, amount: number, notes?: string) => {
