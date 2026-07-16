@@ -20,6 +20,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../utils/categories';
 
 export const Transactions: React.FC = () => {
   const { transactions, accounts, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings } = useFinance();
@@ -206,9 +207,8 @@ export const Transactions: React.FC = () => {
     setShowModal(false);
   };
 
-  // Available Categories based on Form Type
-  const incomeCategories = ['Salary', 'Bonus', 'Overtime', 'Freelance', 'Investment Returns', 'Rental Income', 'Gift Received', 'Refund', 'Other Income'];
-  const expenseCategories = ['Food & Dining', 'Groceries', 'Transportation', 'Fuel', 'Utilities', 'Internet', 'Mobile Package', 'Rent', 'Mortgage', 'Healthcare', 'Insurance', 'Education', 'Clothing', 'Entertainment', 'Subscriptions', 'Travel', 'Family Support', 'Charity', 'Personal Care', 'Shopping', 'Fitness', 'Emergency', 'Miscellaneous'];
+  // Available Categories based on Form Type — sourced from the shared category list
+  // so this can never drift out of sync with Budgets.tsx or Dashboard's quick-add modal.
 
   return (
     <div className="space-y-8">
@@ -224,7 +224,7 @@ export const Transactions: React.FC = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             placeholder="Search category, notes, tags..."
             className="w-full pl-12 pr-4 py-3 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-2xl text-warm-text dark:text-warm-dark-text placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-warm-sage text-sm font-medium transition-all"
           />
@@ -278,10 +278,10 @@ export const Transactions: React.FC = () => {
           >
             <option value="All">All Categories</option>
             <optgroup label="Income Categories">
-              {incomeCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              {INCOME_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
             <optgroup label="Expense Categories">
-              {expenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
           </select>
         </div>
