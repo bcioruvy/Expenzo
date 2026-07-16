@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { 
@@ -19,7 +20,9 @@ import {
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { getMonthlyIncomeExpense, getWeeklyCashFlow } from '../../utils/chartData';
+import { EXPENSE_CATEGORIES } from '../../utils/categories';
 import { EmptyState } from '../shared/EmptyState';
+import { BalanceBeamWidget } from './BalanceBeamWidget';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -71,7 +74,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
     dataLoadError,
     dataLoadErrorDetails,
     balanceChangePercent,
-    topIncomeSources
+    topIncomeSources,
+    isServingMockData
   } = useFinance();
 
   // Modals state
@@ -251,6 +255,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
   return (
     <div className="space-y-8">
+
+      {isServingMockData && (
+        <div className="p-4 rounded-2xl bg-warm-terracotta/10 border border-warm-terracotta/30 flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-warm-terracotta dark:text-warm-dark-terracotta flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-warm-terracotta dark:text-warm-dark-terracotta">You're viewing demo data, not your real account</p>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-0.5">Firebase failed to initialize even though credentials are set, so this is showing sample data instead of your actual finances. Nothing you add here will be saved. Check your Firebase configuration and reload.</p>
+          </div>
+        </div>
+      )}
 
       {dataLoadError && (
         <div className="p-4 rounded-2xl bg-warm-terracotta/10 border border-warm-terracotta/30 flex items-start space-x-3">
@@ -439,7 +453,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
 
         {/* Spending Breakdown & Financial Health */}
         <div className="space-y-8 flex flex-col">
-          
+
+          {/* Balance Beam Widget — the logo motif, reused as a live widget */}
+          <BalanceBeamWidget income={monthlyIncome} expenses={monthlyExpenses} currency={settings.currency} />
+
           {/* Spending Breakdown */}
           <div className="p-6 rounded-3xl bg-warm-card dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-4">
@@ -771,11 +788,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
                   <option value="Food & Dining">Food & Dining</option>
-                  <option value="Groceries">Groceries</option>
-                  <option value="Transportation">Transportation</option>
-                  <option value="Subscriptions">Subscriptions</option>
-                  <option value="Shopping">Shopping</option>
-                  <option value="Entertainment">Entertainment</option>
+                  {EXPENSE_CATEGORIES.filter(c => c !== 'Food & Dining').map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
               <div>
