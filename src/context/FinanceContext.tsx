@@ -9,9 +9,11 @@ import {
   getBudgets, saveBudget as dbSaveBudget, deleteBudget as dbDeleteBudget,
   getGoals, saveGoal as dbSaveGoal, deleteGoal as dbDeleteGoal,
   getNotifications, markNotificationRead as dbMarkNotificationRead,
-  getUserSettings, saveUserSettings as dbSaveUserSettings
+  getUserSettings, saveUserSettings as dbSaveUserSettings,
+  isServingMockDataUnintentionally
 } from '../firebase/db';
 import { formatCurrency } from '../utils/currency';
+import { getBudgetSpentAmount } from '../utils/chartData';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -24,6 +26,7 @@ interface FinanceContextType {
   initialLoadComplete: boolean;
   dataLoadError: boolean;
   dataLoadErrorDetails: string[];
+  isServingMockData: boolean;
   // Computed stats
   currentBalance: number;
   monthlyIncome: number;
@@ -182,7 +185,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const totalMonthlyBudget = budgets
     .filter(b => b.type === 'Monthly Budget')
-    .reduce((sum, b) => sum + b.targetAmount, 0) || 3000;
+    .reduce((sum, b) => sum + b.targetAmount, 0) || settings.monthlyBudgetCap;
 
   const budgetUsagePercent = Math.min(100, Math.round((monthlyExpenses / totalMonthlyBudget) * 100));
 
@@ -218,8 +221,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Dining alert — only if there's real dining spend to compare
   const diningTxs = transactions.filter(t => t.type === 'Expense' && t.category === 'Food & Dining');
   if (diningTxs.length >= 3) {
-    const currentMonthKey = new Date().toISOString().slice(0, 7);
-    const thisMonthDining = diningTxs.filter(t => t.date.startsWith(currentMonthKey)).reduce((s, t) => s + t.amount, 0);
+    const thisMonthDining = diningTxs.filter(t => t.date.startsWith(currentMonthPrefix)).reduce((s, t) => s + t.amount, 0);
     const avgMonthly = diningTxs.reduce((s, t) => s + t.amount, 0) / Math.max(1, new Set(diningTxs.map(t => t.date.slice(0, 7))).size);
     if (avgMonthly > 0 && thisMonthDining > avgMonthly * 1.1) {
       const pctOver = Math.round(((thisMonthDining - avgMonthly) / avgMonthly) * 100);
@@ -292,14 +294,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeTransaction = async (id: string) => {
     if (!user) return;
-    try {
-      await dbDeleteTransaction(id);
-      setTransactions(prev => prev.filter(t => t.id !== id));
-      await fetchData(); // refresh balances
-    } catch (err: any) {
-      console.error('Failed to delete transaction:', err);
-      alert(`Couldn't delete transaction:\n${err?.message || err}`);
-    }
+    await dbDeleteTransaction(id);
+    setTransactions(prev => prev.filter(t => t.id !== id));
+    await fetchData(); // refresh balances
   };
 
   // Deletes multiple transactions, then refreshes balances exactly once at the end.
@@ -308,14 +305,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // mismatching which transaction actually got removed.
   const removeMultipleTransactions = async (ids: string[]) => {
     if (!user || ids.length === 0) return;
-    try {
-      await Promise.all(ids.map(id => dbDeleteTransaction(id)));
-      setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-      await fetchData(); // refresh balances once, after all deletes have completed
-    } catch (err: any) {
-      console.error('Failed to delete transactions:', err);
-      alert(`Couldn't delete the selected transactions:\n${err?.message || err}`);
-    }
+    await Promise.all(ids.map(id => dbDeleteTransaction(id)));
+    setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
+    await fetchData(); // refresh balances once, after all deletes have completed
   };
 
   const addAccount = async (acc: Omit<Account, 'id' | 'userId'>) => {
@@ -332,13 +324,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeAccount = async (id: string) => {
     if (!user) return;
-    try {
-      await dbDeleteAccount(id);
-      setAccounts(prev => prev.filter(a => a.id !== id));
-    } catch (err: any) {
-      console.error('Failed to delete account:', err);
-      alert(`Couldn't delete account:\n${err?.message || err}`);
-    }
+    await dbDeleteAccount(id);
+    setAccounts(prev => prev.filter(a => a.id !== id));
   };
 
   const transferFunds = async (fromAccId: string, toAccId: string, amount: number, notes?: string) => {
@@ -428,7 +415,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails,
+      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally,
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
