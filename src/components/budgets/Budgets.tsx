@@ -13,9 +13,11 @@ import {
   Gauge 
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { getBudgetSpentAmount } from '../../utils/chartData';
+import { EXPENSE_CATEGORIES } from '../../utils/categories';
 
 export const Budgets: React.FC = () => {
-  const { budgets, addBudget, editBudget, removeBudget, settings } = useFinance();
+  const { budgets, addBudget, editBudget, removeBudget, settings, transactions } = useFinance();
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -27,7 +29,6 @@ export const Budgets: React.FC = () => {
   const [bType, setBType] = useState<BudgetType>('Category Budget');
   const [bCategory, setBCategory] = useState('Food & Dining');
   const [bTarget, setBTarget] = useState('');
-  const [bSpent, setBSpent] = useState('');
   const [bAlertThreshold, setBAlertThreshold] = useState('85');
 
   const openAddModal = () => {
@@ -36,7 +37,6 @@ export const Budgets: React.FC = () => {
     setBType('Category Budget');
     setBCategory('Food & Dining');
     setBTarget('');
-    setBSpent('0');
     setBAlertThreshold('85');
     setShowModal(true);
   };
@@ -48,38 +48,49 @@ export const Budgets: React.FC = () => {
     setBType(b.type);
     setBCategory(b.category || 'Food & Dining');
     setBTarget(b.targetAmount.toString());
-    setBSpent(b.spentAmount.toString());
     setBAlertThreshold(b.alertThreshold.toString());
     setShowModal(true);
   };
 
   const handleSaveBudget = async (e: React.FormEvent) => {
     e.preventDefault();
+    const period = 'monthly' as const;
     if (modalMode === 'add') {
+      const draftBudget: Budget = {
+        id: '', userId: '',
+        name: bName,
+        type: bType,
+        category: bType === 'Category Budget' ? bCategory : undefined,
+        targetAmount: parseFloat(bTarget),
+        spentAmount: 0,
+        period,
+        alertThreshold: parseFloat(bAlertThreshold) || 85
+      };
       await addBudget({
         name: bName,
         type: bType,
         category: bType === 'Category Budget' ? bCategory : undefined,
         targetAmount: parseFloat(bTarget),
-        spentAmount: parseFloat(bSpent) || 0,
-        period: 'monthly',
+        spentAmount: getBudgetSpentAmount(draftBudget, transactions),
+        period,
         alertThreshold: parseFloat(bAlertThreshold) || 85
       });
     } else if (editingBdg) {
-      await editBudget({
+      const draftBudget: Budget = {
         ...editingBdg,
         name: bName,
         type: bType,
         category: bType === 'Category Budget' ? bCategory : undefined,
         targetAmount: parseFloat(bTarget),
-        spentAmount: parseFloat(bSpent) || 0,
+      };
+      await editBudget({
+        ...draftBudget,
+        spentAmount: getBudgetSpentAmount(draftBudget, transactions),
         alertThreshold: parseFloat(bAlertThreshold) || 85
       });
     }
     setShowModal(false);
   };
-
-  const categories = ['Food & Dining', 'Groceries', 'Transportation', 'Fuel', 'Utilities', 'Internet', 'Rent', 'Subscriptions', 'Shopping', 'Entertainment', 'Fitness', 'Miscellaneous'];
 
   return (
     <div className="space-y-8">
@@ -113,17 +124,18 @@ export const Budgets: React.FC = () => {
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {budgets.map(bg => {
-          const usagePercent = Math.min(100, Math.round((bg.spentAmount / bg.targetAmount) * 100));
-          const remaining = bg.targetAmount - bg.spentAmount;
+          const liveSpent = getBudgetSpentAmount(bg, transactions);
+          const usagePercent = Math.min(100, Math.round((liveSpent / bg.targetAmount) * 100));
+          const remaining = bg.targetAmount - liveSpent;
           const isExceeded = usagePercent >= bg.alertThreshold;
-          const isFullyExceeded = bg.spentAmount > bg.targetAmount;
+          const isFullyExceeded = liveSpent > bg.targetAmount;
 
           // Budget Forecasting calculation: projects month-end spend based on
           // the actual current day of the month and days in the current month
           const today = new Date();
           const dayOfMonth = today.getDate();
           const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-          const forecastTotal = Math.round((bg.spentAmount / dayOfMonth) * daysInMonth);
+          const forecastTotal = Math.round((liveSpent / dayOfMonth) * daysInMonth);
           const forecastStatus = forecastTotal > bg.targetAmount ? 'Over Target Forecast' : 'Optimal Forecast';
 
           return (
@@ -159,7 +171,7 @@ export const Budgets: React.FC = () => {
                 {/* Progress Bar & Amounts */}
                 <div className="mt-6 space-y-2">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(bg.spentAmount, settings.currency)}</span>
+                    <span className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(liveSpent, settings.currency)}</span>
                     <span className="text-xs font-bold text-warm-muted dark:text-warm-dark-muted">of {formatCurrency(bg.targetAmount, settings.currency)} cap</span>
                   </div>
 
@@ -255,7 +267,7 @@ export const Budgets: React.FC = () => {
                     value={bCategory} onChange={(e) => setBCategory(e.target.value)}
                     className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                   >
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               )}
@@ -277,13 +289,9 @@ export const Budgets: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Current Spent ({getCurrencySymbol(settings.currency)})</label>
-                <input 
-                  type="number" step="0.01" value={bSpent} onChange={(e) => setBSpent(e.target.value)} placeholder="0.00"
-                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
-                />
-              </div>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted bg-warm-surface dark:bg-warm-dark-surface/50 rounded-xl px-3 py-2.5">
+                Spending progress is calculated automatically from your logged transactions — no need to enter it manually.
+              </p>
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
                 <button type="button" onClick={() => setShowModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
