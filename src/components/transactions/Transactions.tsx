@@ -534,7 +534,7 @@ export const Transactions: React.FC = () => {
                     value={formCategory} onChange={(e) => setFormCategory(e.target.value)}
                     className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                   >
-                    {(formType === 'Income' ? incomeCategories : expenseCategories).map(c => <option key={c} value={c}>{c}</option>)}
+                    {(formType === 'Income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
