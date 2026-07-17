@@ -17,13 +17,14 @@ import {
   Calendar,
   CreditCard,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../utils/categories';
 
 export const Transactions: React.FC = () => {
-  const { transactions, accounts, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings } = useFinance();
+  const { transactions, accounts, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings, deleteError, clearDeleteError } = useFinance();
 
   // Filters & Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -212,6 +213,22 @@ export const Transactions: React.FC = () => {
 
   return (
     <div className="space-y-8">
+
+      {deleteError && (
+        <div className="p-4 rounded-2xl bg-warm-terracotta/10 border border-warm-terracotta/30 flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-warm-terracotta dark:text-warm-dark-terracotta flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-warm-terracotta dark:text-warm-dark-terracotta">Couldn't complete that delete</p>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-0.5">{deleteError}</p>
+          </div>
+          <button
+            onClick={clearDeleteError}
+            className="text-xs font-bold text-warm-terracotta dark:text-warm-dark-terracotta hover:opacity-70 transition-opacity flex-shrink-0"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       
       {/* Action Toolbar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
