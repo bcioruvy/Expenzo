@@ -1,5 +1,12 @@
 import { Transaction, Budget } from '../types';
 
+// Internal transfers (money moved between the user's own accounts) are recorded as an
+// Expense + Income pair so each account's balance stays accurate, but they aren't real
+// earned income or real spending. Every chart that sums "money in/out" must exclude them,
+// or moving money between accounts inflates income/expense trends and cash flow charts.
+const isInternalTransfer = (t: Transaction) => t.category === 'Transfer' && (t.tags || []).includes('internal');
+
+
 // Returns the "current month" (YYYY-MM) to treat as "today" for chart windows and
 // budget calculations. Derived from the most recent transaction date when available,
 // falling back to the real device date only when there's no transaction history yet.
@@ -32,12 +39,12 @@ export const getMonthlyIncomeExpense = (transactions: Transaction[], n: number =
   const months = getLastNMonths(n, refDate);
   const income = months.map(({ key }) =>
     transactions
-      .filter(t => t.type === 'Income' && t.date.startsWith(key))
+      .filter(t => t.type === 'Income' && t.date.startsWith(key) && !isInternalTransfer(t))
       .reduce((sum, t) => sum + t.amount, 0)
   );
   const expenses = months.map(({ key }) =>
     transactions
-      .filter(t => t.type === 'Expense' && t.date.startsWith(key))
+      .filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isInternalTransfer(t))
       .reduce((sum, t) => sum + t.amount, 0)
   );
   return { labels: months.map(m => m.label), income, expenses };
@@ -70,8 +77,8 @@ export const getWeeklyCashFlow = (transactions: Transaction[], n: number = 4, re
       const d = new Date(t.date);
       return d >= start && d <= end;
     });
-    const income = inRange.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = inRange.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+    const income = inRange.filter(t => t.type === 'Income' && !isInternalTransfer(t)).reduce((sum, t) => sum + t.amount, 0);
+    const expense = inRange.filter(t => t.type === 'Expense' && !isInternalTransfer(t)).reduce((sum, t) => sum + t.amount, 0);
     return income - expense;
   });
   return { labels: weeks.map(w => w.label), netFlow };
@@ -81,7 +88,7 @@ export const getWeeklyCashFlow = (transactions: Transaction[], n: number = 4, re
 // (defaults to the reference month derived from transaction history, not the device clock).
 export const getSpendingByCategory = (transactions: Transaction[], monthKey?: string) => {
   const key = monthKey || getReferenceDate(transactions).toISOString().slice(0, 7);
-  const expenses = transactions.filter(t => t.type === 'Expense' && t.date.startsWith(key));
+  const expenses = transactions.filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isInternalTransfer(t));
   const totals: Record<string, number> = {};
   expenses.forEach(t => {
     totals[t.category] = (totals[t.category] || 0) + t.amount;
@@ -122,6 +129,7 @@ export const getBudgetSpentAmount = (budget: Budget, transactions: Transaction[]
     .filter(t => {
       if (t.type !== 'Expense') return false;
       if (budget.category && t.category !== budget.category) return false;
+      if (!budget.category && isInternalTransfer(t)) return false; // Monthly Budgets sum all real spending, not internal transfers
       const d = new Date(t.date + 'T00:00:00');
       return d >= periodStart && d <= periodEnd;
     })
