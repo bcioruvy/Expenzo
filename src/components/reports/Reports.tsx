@@ -26,8 +26,9 @@ export const Reports: React.FC = () => {
     () => transactions.filter(t => t.date.startsWith(reportMonth)),
     [transactions, reportMonth]
   );
-  const monthIncomeTotal = monthTransactions.filter(t => t.type === 'Income').reduce((s, t) => s + t.amount, 0);
-  const monthExpenseTotal = monthTransactions.filter(t => t.type === 'Expense').reduce((s, t) => s + t.amount, 0);
+  const isInternalTransfer = (t: typeof monthTransactions[number]) => t.category === 'Transfer' && (t.tags || []).includes('internal');
+  const monthIncomeTotal = monthTransactions.filter(t => t.type === 'Income' && !isInternalTransfer(t)).reduce((s, t) => s + t.amount, 0);
+  const monthExpenseTotal = monthTransactions.filter(t => t.type === 'Expense' && !isInternalTransfer(t)).reduce((s, t) => s + t.amount, 0);
   const monthSavings = monthIncomeTotal - monthExpenseTotal;
   const referenceDate = React.useMemo(() => new Date(reportMonth + '-15T00:00:00'), [reportMonth]);
 
