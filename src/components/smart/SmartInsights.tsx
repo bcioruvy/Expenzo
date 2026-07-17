@@ -48,14 +48,34 @@ export const SmartInsights: React.FC<SmartInsightsProps> = ({ setActiveTab }) =>
           
           <div className="flex flex-col items-center p-6 bg-warm-dark-card/80 backdrop-blur-xl rounded-3xl border border-warm-dark-surface/60 shadow-xl flex-shrink-0 w-64">
             <span className="text-xs font-bold uppercase tracking-wider text-warm-dark-muted mb-2">Health Standing</span>
-            <div className="flex items-baseline space-x-1">
-              <span className="text-4xl font-extrabold text-white">{financialHealthScore}</span>
-              <span className="text-warm-dark-muted font-medium text-sm">/ 100</span>
-            </div>
-            <div className="mt-4 w-full flex items-center justify-center space-x-1 text-xs text-warm-dark-sage font-bold bg-warm-sage/10 py-1.5 px-3 rounded-xl border border-warm-sage/20">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Excellent Standing</span>
-            </div>
+            {financialHealthScore === null ? (
+              <>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-4xl font-extrabold text-white">—</span>
+                </div>
+                <div className="mt-4 w-full flex items-center justify-center space-x-1 text-xs text-warm-dark-muted font-bold bg-white/5 py-1.5 px-3 rounded-xl border border-white/10">
+                  <Info className="w-4 h-4" />
+                  <span>Not enough data yet</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-baseline space-x-1">
+                  <span className="text-4xl font-extrabold text-white">{financialHealthScore}</span>
+                  <span className="text-warm-dark-muted font-medium text-sm">/ 100</span>
+                </div>
+                <div className={`mt-4 w-full flex items-center justify-center space-x-1 text-xs font-bold py-1.5 px-3 rounded-xl border ${
+                  financialHealthScore >= 80 ? 'text-warm-dark-sage bg-warm-sage/10 border-warm-sage/20' :
+                  financialHealthScore >= 60 ? 'text-warm-dark-gold bg-warm-gold/10 border-warm-gold/20' :
+                  'text-warm-dark-terracotta bg-warm-terracotta/10 border-warm-terracotta/20'
+                }`}>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>
+                    {financialHealthScore >= 80 ? 'Excellent Standing' : financialHealthScore >= 60 ? 'Good Standing' : financialHealthScore >= 40 ? 'Fair Standing' : 'Needs Attention'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
