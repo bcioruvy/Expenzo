@@ -35,7 +35,7 @@ interface FinanceContextType {
   monthlyExpenses: number;
   savingsThisMonth: number;
   budgetUsagePercent: number;
-  financialHealthScore: number;
+  financialHealthScore: number | null;
   balanceChangePercent: number | null;
   topIncomeSources: string;
   smartInsights: SmartInsight[];
@@ -140,6 +140,13 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Computed Calculations
   const currentBalance = accounts.reduce((acc, a) => acc + a.balance, 0);
 
+  // Internal transfers (money moved between the user's own accounts) are recorded as an
+  // Expense + Income pair so each account's balance stays accurate, but they are not real
+  // earned income or real spending — they must be excluded from every "money in/out" stat
+  // (monthly income/expenses, savings, budget usage, health score, charts) or those numbers
+  // get inflated every time the user moves money between accounts.
+  const isInternalTransfer = (t: Transaction) => t.category === 'Transfer' && (t.tags || []).includes('internal');
+
   // Filter for current month (using 2026-06 as today's date base)
   // "Current month" is derived from the most recent transaction date rather than
   // a hardcoded string. This keeps monthly stats correct as real transactions are
@@ -150,11 +157,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, null);
   const currentMonthPrefix = (mostRecentTxDate || new Date().toISOString()).slice(0, 7);
   const monthlyIncome = transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix))
+    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
     .reduce((sum, t) => sum + t.amount, 0);
 
   const monthlyExpenses = transactions
-    .filter(t => t.type === 'Expense' && t.date.startsWith(currentMonthPrefix))
+    .filter(t => t.type === 'Expense' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
     .reduce((sum, t) => sum + t.amount, 0);
 
   const savingsThisMonth = monthlyIncome - monthlyExpenses;
@@ -165,10 +172,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
   const prevMonthPrefix = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const prevMonthIncome = transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(prevMonthPrefix))
+    .filter(t => t.type === 'Income' && t.date.startsWith(prevMonthPrefix) && !isInternalTransfer(t))
     .reduce((sum, t) => sum + t.amount, 0);
   const prevMonthExpenses = transactions
-    .filter(t => t.type === 'Expense' && t.date.startsWith(prevMonthPrefix))
+    .filter(t => t.type === 'Expense' && t.date.startsWith(prevMonthPrefix) && !isInternalTransfer(t))
     .reduce((sum, t) => sum + t.amount, 0);
   const prevMonthNet = prevMonthIncome - prevMonthExpenses;
   const balanceChangePercent = prevMonthNet !== 0
@@ -178,7 +185,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Top income category label for this month, e.g. "Salary" or "Salary + Freelance"
   const incomeByCategory: Record<string, number> = {};
   transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix))
+    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
     .forEach(t => { incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount; });
   const topIncomeSources = Object.entries(incomeByCategory)
     .sort((a, b) => b[1] - a[1])
@@ -193,24 +200,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const budgetUsagePercent = Math.min(100, Math.round((monthlyExpenses / totalMonthlyBudget) * 100));
 
   // Financial Health Score calculation (0 - 100)
-  // Factors: savings rate > 20% (+30), budget usage < 80% (+30), emergency fund > $5k (+20), no high cc debt (+20)
-  let financialHealthScore = 60; // base
-  if (monthlyIncome > 0) {
-    const savingsRate = savingsThisMonth / monthlyIncome;
-    if (savingsRate >= 0.25) financialHealthScore += 25;
-    else if (savingsRate >= 0.10) financialHealthScore += 15;
+  // Only computed once there's real activity to base it on — no free "base score" for an empty account.
+  // Factors: savings rate (+40 max), budget usage < 80% (+20), emergency fund saved (+25), income logged (+15 base once earned)
+  const hasEnoughDataForScore = monthlyIncome > 0 || monthlyExpenses > 0;
+  let financialHealthScore: number | null = null;
+  if (hasEnoughDataForScore) {
+    let score = 0;
+    if (monthlyIncome > 0) {
+      score += 15; // credit for having real income data to evaluate against
+      const savingsRate = savingsThisMonth / monthlyIncome;
+      if (savingsRate >= 0.25) score += 40;
+      else if (savingsRate >= 0.10) score += 25;
+      else if (savingsRate > 0) score += 10;
+    }
+    // Budget usage only counts if a real budget target exists AND money has actually been spent against it
+    if (monthlyExpenses > 0 && budgetUsagePercent < 80) score += 20;
+    const emergencySaved = goals.find(g => g.name.toLowerCase().includes('emergency'))?.currentAmount || 0;
+    if (emergencySaved >= 10000) score += 25;
+    else if (emergencySaved >= 5000) score += 15;
+    financialHealthScore = Math.min(96, score); // keep realistic max
   }
-  if (budgetUsagePercent < 80) financialHealthScore += 15;
-  const emergencySaved = goals.find(g => g.name.toLowerCase().includes('emergency'))?.currentAmount || 0;
-  if (emergencySaved >= 10000) financialHealthScore += 15;
-  else if (emergencySaved >= 5000) financialHealthScore += 10;
-  if (financialHealthScore > 100) financialHealthScore = 96; // keep realistic max
 
   // Smart Insights generation — only shows insights genuinely supported by real transaction/goal data
   const smartInsights: SmartInsight[] = [];
 
-  // Health score insight — only if there's enough transaction history to make it meaningful
-  if (transactions.length > 0) {
+  // Health score insight — only if a real score was computed
+  if (financialHealthScore !== null) {
     const scoreLabel = financialHealthScore >= 80 ? 'Excellent' : financialHealthScore >= 60 ? 'Good' : financialHealthScore >= 40 ? 'Fair' : 'Needs Attention';
     smartInsights.push({
       id: 'si-health',
