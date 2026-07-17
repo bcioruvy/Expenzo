@@ -27,6 +27,8 @@ interface FinanceContextType {
   dataLoadError: boolean;
   dataLoadErrorDetails: string[];
   isServingMockData: boolean;
+  deleteError: string | null;
+  clearDeleteError: () => void;
   // Computed stats
   currentBalance: number;
   monthlyIncome: number;
@@ -74,6 +76,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [dataLoadError, setDataLoadError] = useState(false);
   const [dataLoadErrorDetails, setDataLoadErrorDetails] = useState<string[]>([]);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!user) return;
@@ -270,7 +273,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Action methods
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'userId'>) => {
     if (!user) return;
-    const newTx = await dbSaveTransaction({ ...tx, id: '', userId: user.uid });
+    const newTx = await dbSaveTransaction({ ...tx, userId: user.uid } as Transaction);
     setTransactions(prev => [newTx, ...prev]);
     // update local account balance
     setAccounts(prev => prev.map(acc => {
@@ -294,9 +297,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeTransaction = async (id: string) => {
     if (!user) return;
-    await dbDeleteTransaction(id);
-    setTransactions(prev => prev.filter(t => t.id !== id));
-    await fetchData(); // refresh balances
+    try {
+      await dbDeleteTransaction(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      await fetchData(); // refresh balances
+      setDeleteError(null);
+    } catch (err: any) {
+      console.error('Failed to delete transaction:', err);
+      setDeleteError(err?.message || 'Failed to delete transaction. Please try again.');
+    }
   };
 
   // Deletes multiple transactions, then refreshes balances exactly once at the end.
@@ -305,14 +314,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // mismatching which transaction actually got removed.
   const removeMultipleTransactions = async (ids: string[]) => {
     if (!user || ids.length === 0) return;
-    await Promise.all(ids.map(id => dbDeleteTransaction(id)));
-    setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-    await fetchData(); // refresh balances once, after all deletes have completed
+    try {
+      await Promise.all(ids.map(id => dbDeleteTransaction(id)));
+      setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
+      await fetchData(); // refresh balances once, after all deletes have completed
+      setDeleteError(null);
+    } catch (err: any) {
+      console.error('Failed to delete transactions:', err);
+      setDeleteError(err?.message || 'Failed to delete one or more transactions. Please try again.');
+    }
   };
 
   const addAccount = async (acc: Omit<Account, 'id' | 'userId'>) => {
     if (!user) return;
-    const newAcc = await dbSaveAccount({ ...acc, id: '', userId: user.uid });
+    const newAcc = await dbSaveAccount({ ...acc, userId: user.uid } as Account);
     setAccounts(prev => [...prev, newAcc]);
   };
 
@@ -324,8 +339,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const removeAccount = async (id: string) => {
     if (!user) return;
-    await dbDeleteAccount(id);
-    setAccounts(prev => prev.filter(a => a.id !== id));
+    try {
+      await dbDeleteAccount(id);
+      setAccounts(prev => prev.filter(a => a.id !== id));
+      setDeleteError(null);
+    } catch (err: any) {
+      console.error('Failed to delete account:', err);
+      setDeleteError(err?.message || 'Failed to delete account. Please try again.');
+    }
   };
 
   const transferFunds = async (fromAccId: string, toAccId: string, amount: number, notes?: string) => {
@@ -363,7 +384,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addBudget = async (b: Omit<Budget, 'id' | 'userId'>) => {
     if (!user) return;
-    const newB = await dbSaveBudget({ ...b, id: '', userId: user.uid });
+    const newB = await dbSaveBudget({ ...b, userId: user.uid } as Budget);
     setBudgets(prev => [...prev, newB]);
   };
 
@@ -381,7 +402,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addGoal = async (g: Omit<Goal, 'id' | 'userId'>) => {
     if (!user) return;
-    const newG = await dbSaveGoal({ ...g, id: '', userId: user.uid });
+    const newG = await dbSaveGoal({ ...g, userId: user.uid } as Goal);
     setGoals(prev => [...prev, newG]);
   };
 
@@ -415,7 +436,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally,
+      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
