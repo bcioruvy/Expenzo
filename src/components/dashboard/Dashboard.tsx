@@ -559,11 +559,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
               <Award className="w-6 h-6 text-warm-dark-gold animate-pulse" />
             </div>
             <div className="relative z-10 flex items-baseline space-x-2">
-              <h3 className="text-4xl font-extrabold tracking-tight">{financialHealthScore}</h3>
-              <span className="text-sm text-warm-dark-sage font-medium">/ 100</span>
+              <h3 className="text-4xl font-extrabold tracking-tight">{financialHealthScore ?? '—'}</h3>
+              {financialHealthScore !== null && <span className="text-sm text-warm-dark-sage font-medium">/ 100</span>}
             </div>
             <p className="text-xs text-warm-dark-text mt-2 leading-relaxed relative z-10">
-              Excellent standing! Your strong savings buffer and smart budget limits put you in the top 10% of salaried individuals.
+              {financialHealthScore === null
+                ? 'Log some income and expenses to unlock your financial health score.'
+                : financialHealthScore >= 80
+                ? 'Excellent standing! Your strong savings buffer and smart budget limits are paying off.'
+                : financialHealthScore >= 60
+                ? 'Good standing. Keep building your savings rate and emergency fund to improve further.'
+                : financialHealthScore >= 40
+                ? 'Fair standing. There\'s room to improve your savings rate or budget usage.'
+                : 'Needs attention. Review your spending and budgets to improve your score.'}
             </p>
             <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between text-xs text-white font-bold relative z-10">
               <span>Recommendations</span>
