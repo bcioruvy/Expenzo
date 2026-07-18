@@ -53,9 +53,11 @@ ChartJS.register(
 
 interface DashboardProps {
   setActiveTab: (tab: string) => void;
+  autoAction?: { action: string; amount?: string } | null;
+  onAutoActionHandled?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, onAutoActionHandled }) => {
   const { 
     currentBalance, 
     monthlyIncome, 
@@ -98,6 +100,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
   const [transNotes, setTransNotes] = useState('');
 
   const [bName, setBName] = useState('');
+
+  // Handle deep-link actions coming from an iOS Shortcut (e.g. ?action=add-expense&amount=500).
+  // Runs once when autoAction is provided, opens the matching modal (pre-filling amount if given),
+  // then tells App.tsx it's been handled so it isn't re-triggered on re-render or refresh.
+  React.useEffect(() => {
+    if (!autoAction) return;
+    if (autoAction.amount) setTxAmount(autoAction.amount);
+    if (autoAction.action === 'add-expense') setShowExpenseModal(true);
+    else if (autoAction.action === 'add-income') setShowIncomeModal(true);
+    else if (autoAction.action === 'transfer') {
+      if (autoAction.amount) setTransAmount(autoAction.amount);
+      setShowTransferModal(true);
+    }
+    onAutoActionHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAction]);
+
   const [bCategory, setBCategory] = useState('Food & Dining');
   const [bAmount, setBAmount] = useState('');
 
