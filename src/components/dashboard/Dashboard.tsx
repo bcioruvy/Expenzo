@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
+import { Modal } from '../shared/Modal';
 import { 
   DollarSign, 
   ArrowUpRight, 
@@ -622,8 +623,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
       
       {/* Add Income Modal */}
       {showIncomeModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+        <Modal onClose={() => setShowIncomeModal(false)} maxWidthClassName="max-w-md">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Add Personal Income</h3>
               <button onClick={() => setShowIncomeModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
@@ -674,14 +674,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-dark-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Add Income</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Add Expense Modal */}
       {showExpenseModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+        <Modal onClose={() => setShowExpenseModal(false)} maxWidthClassName="max-w-md">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Add Personal Expense</h3>
               <button onClick={() => setShowExpenseModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
@@ -736,14 +734,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-terracotta hover:bg-warm-dark-terracotta text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Add Expense</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Transfer Funds Modal */}
       {showTransferModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+        <Modal onClose={() => setShowTransferModal(false)} maxWidthClassName="max-w-md">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Transfer Between Accounts</h3>
               <button onClick={() => setShowTransferModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
@@ -786,14 +782,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Execute Transfer</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Create Budget Modal */}
       {showBudgetModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-warm-card dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+        <Modal onClose={() => setShowBudgetModal(false)} maxWidthClassName="max-w-md">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Create New Budget</h3>
               <button onClick={() => setShowBudgetModal(false)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
@@ -830,8 +824,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab }) => {
                 <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-gold hover:bg-warm-gold text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Save Budget</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
     </div>
