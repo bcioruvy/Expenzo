@@ -1,7 +1,7 @@
 // @ts-ignore
 import { initializeApp } from 'firebase/app';
 // @ts-ignore
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 // @ts-ignore
 import { getFirestore } from 'firebase/firestore';
 
@@ -43,6 +43,16 @@ if (isFirebaseConfigured) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    // Explicitly set local (IndexedDB-backed) persistence immediately on init, rather than
+    // only when a "Remember me" login completes. This ensures every browser context — including
+    // a fresh Safari tab opened by an iOS Shortcut — persists the session as durably as iOS
+    // allows from the very first load, instead of depending on a prior login having already run
+    // setAuthPersistence() in that specific context. This does not fix Safari-vs-Home-Screen-app
+    // storage isolation on iOS (those remain separate origins), but it removes persistence itself
+    // as a source of unnecessary re-logins within either context.
+    setPersistence(auth, browserLocalPersistence).catch((err: any) => {
+      console.warn('Failed to set Firebase Auth persistence:', err);
+    });
   } catch (error: any) {
     console.error("Firebase initialization error:", error);
     firebaseInitError = error?.message || String(error);
