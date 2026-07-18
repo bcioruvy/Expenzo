@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Budget, BudgetType } from '../../types';
 import { EmptyState } from '../shared/EmptyState';
+import { Modal } from '../shared/Modal';
 import { 
   PieChart as PieIcon, 
   PlusCircle, 
@@ -230,8 +231,7 @@ export const Budgets: React.FC = () => {
 
       {/* Add / Edit Budget Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface max-w-md w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+        <Modal onClose={() => setShowModal(false)} maxWidthClassName="max-w-md">
             <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
               <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">
                 {modalMode === 'add' ? 'Add Personal Budget' : 'Edit Budget'}
@@ -301,8 +301,7 @@ export const Budgets: React.FC = () => {
               </div>
 
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
     </div>
