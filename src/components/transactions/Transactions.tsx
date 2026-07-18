@@ -249,10 +249,10 @@ export const Transactions: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+        <div className="flex items-center gap-3 w-full lg:w-auto">
           <button
             onClick={handleExportCSV}
-            className="px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center space-x-2 transition-colors shadow-sm"
+            className="flex-1 lg:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
           >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
@@ -260,7 +260,7 @@ export const Transactions: React.FC = () => {
           
           <button
             onClick={openAddModal}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center space-x-2 transition-all group"
+            className="flex-1 lg:flex-none px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center justify-center space-x-2 transition-all group whitespace-nowrap"
           >
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             <span>Add Transaction</span>
@@ -583,15 +583,15 @@ export const Transactions: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Date</label>
                   <div className="relative">
-                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-sage dark:text-warm-dark-sage pointer-events-none" />
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-sage dark:text-warm-dark-sage pointer-events-none z-10" />
                     <input 
                       type="date" required value={formDate} onChange={(e) => setFormDate(e.target.value)}
                       max={new Date().toISOString().split('T')[0]}
-                      className="w-full p-3 pl-10 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
+                      className="w-full max-w-full min-w-0 box-border p-3 pl-10 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium appearance-none" 
                     />
                   </div>
                 </div>
@@ -600,12 +600,13 @@ export const Transactions: React.FC = () => {
                   <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Tags (Comma Separated)</label>
                   <input 
                     type="text" value={formTags} onChange={(e) => setFormTags(e.target.value)} placeholder="monthly, corporate, fixed"
-                    className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
+                    className="w-full max-w-full min-w-0 box-border p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium" 
                   />
                 </div>
               </div>
 
               <div>
+
                 <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Notes / Description</label>
                 <input 
                   type="text" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Detailed transaction breakdown..."
