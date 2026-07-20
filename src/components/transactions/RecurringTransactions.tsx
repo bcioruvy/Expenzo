@@ -3,7 +3,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { RecurringRule } from '../../types';
 import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
-import { Repeat, Plus, Pause, Play, Trash2, Edit3 } from 'lucide-react';
+import { Repeat, Plus, Pause, Play, Trash2, Edit3, Calendar } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../utils/categories';
 
@@ -256,19 +256,25 @@ export const RecurringTransactions: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Start Date</label>
-                <input
-                  type="date" required value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)}
-                  disabled={modalMode === 'edit'}
-                  className="w-full max-w-full min-w-0 box-border p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium disabled:opacity-50 appearance-none"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-sage dark:text-warm-dark-sage pointer-events-none z-10" />
+                  <input
+                    type="date" required value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)}
+                    disabled={modalMode === 'edit'}
+                    className="w-full max-w-full min-w-0 box-border p-3 pl-10 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium disabled:opacity-50 appearance-none"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">End Date (Optional)</label>
-                <input
-                  type="date" value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)}
-                  min={formStartDate}
-                  className="w-full max-w-full min-w-0 box-border p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium appearance-none"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-sage dark:text-warm-dark-sage pointer-events-none z-10" />
+                  <input
+                    type="date" value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)}
+                    min={formStartDate}
+                    className="w-full max-w-full min-w-0 box-border p-3 pl-10 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none text-sm font-medium appearance-none"
+                  />
+                </div>
               </div>
             </div>
 
