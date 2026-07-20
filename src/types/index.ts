@@ -142,6 +142,25 @@ export interface AppNotification {
   createdAt: string;
 }
 
+export interface RecurringRule {
+  id: string;
+  userId: string;
+  type: TransactionType;
+  amount: number;
+  category: IncomeCategory | ExpenseCategory | string;
+  notes: string;
+  tags: string[];
+  paymentMethod: PaymentMethod | string;
+  accountId: string;
+  accountName: string;
+  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+  startDate: string; // YYYY-MM-DD — first occurrence
+  nextDueDate: string; // YYYY-MM-DD — next date a transaction should be auto-created
+  endDate?: string; // YYYY-MM-DD — optional, stop generating after this date
+  isActive: boolean; // paused rules don't generate new transactions
+  lastGeneratedDate?: string; // YYYY-MM-DD — for display, not used in scheduling logic
+}
+
 export interface UserSettings {
   userId: string;
   currency: string;
