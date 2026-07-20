@@ -14,7 +14,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured, firebaseInitError } from './config';
-import { Transaction, Account, Budget, Goal, AppNotification, UserSettings, ReportSummary } from '../types';
+import { Transaction, Account, Budget, Goal, AppNotification, UserSettings, ReportSummary, RecurringRule } from '../types';
 
 // True only when real-looking Firebase credentials were provided but initialization
 // genuinely failed — as opposed to isFirebaseConfigured being false because no
@@ -71,6 +71,8 @@ let mockNotifications: AppNotification[] = [
   { id: 'n-4', userId: 'mock-user-123', title: 'May Financial Summary', message: 'Your monthly financial summary report is ready to review.', type: 'monthly_summary', isRead: true, createdAt: '2026-06-01T08:00:00Z' }
 ];
 
+let mockRecurringRules: RecurringRule[] = [];
+
 let mockSettings: UserSettings = {
   userId: 'mock-user-123',
   currency: 'PKR',
@@ -89,7 +91,7 @@ export const getAccounts = async (userId: string): Promise<Account[]> => {
   if (!isFirebaseConfigured || !db) return mockAccounts;
   const q = query(collection(db, 'accounts'), where('userId', '==', userId));
   const snap = await getDocs(q);
-  return snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Account));
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as Account));
 };
 
 export const saveAccount = async (account: Account): Promise<Account> => {
@@ -125,7 +127,7 @@ export const getTransactions = async (userId: string): Promise<Transaction[]> =>
   if (!isFirebaseConfigured || !db) return mockTransactions;
   const q = query(collection(db, 'transactions'), where('userId', '==', userId), orderBy('date', 'desc'));
   const snap = await getDocs(q);
-  return snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Transaction));
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as Transaction));
 };
 
 export const saveTransaction = async (transaction: Transaction): Promise<Transaction> => {
@@ -173,7 +175,7 @@ export const getBudgets = async (userId: string): Promise<Budget[]> => {
   if (!isFirebaseConfigured || !db) return mockBudgets;
   const q = query(collection(db, 'budgets'), where('userId', '==', userId));
   const snap = await getDocs(q);
-  return snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Budget));
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as Budget));
 };
 
 export const saveBudget = async (budget: Budget): Promise<Budget> => {
@@ -208,7 +210,7 @@ export const getGoals = async (userId: string): Promise<Goal[]> => {
   if (!isFirebaseConfigured || !db) return mockGoals;
   const q = query(collection(db, 'goals'), where('userId', '==', userId));
   const snap = await getDocs(q);
-  return snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Goal));
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as Goal));
 };
 
 export const saveGoal = async (goal: Goal): Promise<Goal> => {
@@ -243,7 +245,7 @@ export const getNotifications = async (userId: string): Promise<AppNotification[
   if (!isFirebaseConfigured || !db) return mockNotifications;
   const q = query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
-  return snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as AppNotification));
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as AppNotification));
 };
 
 export const markNotificationRead = async (id: string): Promise<void> => {
@@ -252,6 +254,41 @@ export const markNotificationRead = async (id: string): Promise<void> => {
     return;
   }
   await updateDoc(doc(db, 'notifications', id), { isRead: true });
+};
+
+export const getRecurringRules = async (userId: string): Promise<RecurringRule[]> => {
+  if (!isFirebaseConfigured || !db) return mockRecurringRules;
+  const q = query(collection(db, 'recurringRules'), where('userId', '==', userId));
+  const snap = await getDocs(q);
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as RecurringRule));
+};
+
+export const saveRecurringRule = async (rule: RecurringRule): Promise<RecurringRule> => {
+  if (!isFirebaseConfigured || !db) {
+    if (rule.id) {
+      mockRecurringRules = mockRecurringRules.map(r => r.id === rule.id ? rule : r);
+      return rule;
+    }
+    const newRule = { ...rule, id: 'rec-' + Date.now() };
+    mockRecurringRules.push(newRule);
+    return newRule;
+  }
+  if (rule.id) {
+    const docRef = doc(db, 'recurringRules', rule.id);
+    await updateDoc(docRef, { ...rule });
+    return rule;
+  } else {
+    const docRef = await addDoc(collection(db, 'recurringRules'), { ...rule });
+    return { ...rule, id: docRef.id };
+  }
+};
+
+export const deleteRecurringRule = async (id: string): Promise<void> => {
+  if (!isFirebaseConfigured || !db) {
+    mockRecurringRules = mockRecurringRules.filter(r => r.id !== id);
+    return;
+  }
+  await deleteDoc(doc(db, 'recurringRules', id));
 };
 
 export const getUserSettings = async (userId: string): Promise<UserSettings> => {
