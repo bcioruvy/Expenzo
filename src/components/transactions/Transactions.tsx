@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { Modal } from '../shared/Modal';
+import { RecurringTransactions } from './RecurringTransactions';
 import { 
   Search, 
   Filter, 
@@ -501,6 +502,8 @@ export const Transactions: React.FC = () => {
         </div>
 
       </div>
+
+      <RecurringTransactions />
 
       {/* Add / Edit Transaction Modal */}
       {showModal && (
