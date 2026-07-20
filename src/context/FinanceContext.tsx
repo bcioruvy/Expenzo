@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { 
-  Account, Transaction, Budget, Goal, AppNotification, UserSettings, SmartInsight, BillReminder 
+  Account, Transaction, Budget, Goal, AppNotification, UserSettings, SmartInsight, BillReminder, RecurringRule 
 } from '../types';
 import { 
   getAccounts, saveAccount as dbSaveAccount, deleteAccount as dbDeleteAccount,
@@ -10,6 +10,7 @@ import {
   getGoals, saveGoal as dbSaveGoal, deleteGoal as dbDeleteGoal,
   getNotifications, markNotificationRead as dbMarkNotificationRead,
   getUserSettings, saveUserSettings as dbSaveUserSettings,
+  getRecurringRules, saveRecurringRule as dbSaveRecurringRule, deleteRecurringRule as dbDeleteRecurringRule,
   isServingMockDataUnintentionally
 } from '../firebase/db';
 import { formatCurrency } from '../utils/currency';
@@ -21,6 +22,7 @@ interface FinanceContextType {
   budgets: Budget[];
   goals: Goal[];
   notifications: AppNotification[];
+  recurringRules: RecurringRule[];
   settings: UserSettings;
   loading: boolean;
   initialLoadComplete: boolean;
@@ -57,6 +59,9 @@ interface FinanceContextType {
   removeGoal: (id: string) => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
   updateSettings: (s: Partial<UserSettings>) => Promise<void>;
+  addRecurringRule: (r: Omit<RecurringRule, 'id' | 'userId'>) => Promise<void>;
+  editRecurringRule: (r: RecurringRule) => Promise<void>;
+  removeRecurringRule: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -69,6 +74,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [recurringRules, setRecurringRules] = useState<RecurringRule[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
     userId: '', currency: 'PKR', language: 'English', theme: 'light', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
   });
@@ -88,10 +94,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getBudgets(user.uid),
         getGoals(user.uid),
         getNotifications(user.uid),
-        getUserSettings(user.uid)
+        getUserSettings(user.uid),
+        getRecurringRules(user.uid)
       ]);
 
-      const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes] = results;
+      const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes, recRes] = results;
       const errors: string[] = [];
 
       if (accsRes.status === 'fulfilled') setAccounts(accsRes.value);
@@ -111,6 +118,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (setsRes.status === 'fulfilled') setSettings(setsRes.value);
       else { console.error('Failed to load settings:', setsRes.reason); errors.push(`Settings: ${setsRes.reason?.message || setsRes.reason}`); }
+
+      if (recRes.status === 'fulfilled') setRecurringRules(recRes.value);
+      else { console.error('Failed to load recurring rules:', recRes.reason); errors.push(`Recurring Rules: ${recRes.reason?.message || recRes.reason}`); }
 
       setDataLoadErrorDetails(errors);
       setDataLoadError(errors.length > 0);
@@ -133,6 +143,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setBudgets([]);
       setGoals([]);
       setNotifications([]);
+      setRecurringRules([]);
       setLoading(false);
     }
   }, [user, fetchData]);
@@ -445,18 +456,101 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSettings(updated);
   };
 
+  const addRecurringRule = async (r: Omit<RecurringRule, 'id' | 'userId'>) => {
+    if (!user) return;
+    const newRule = await dbSaveRecurringRule({ ...r, userId: user.uid } as RecurringRule);
+    setRecurringRules(prev => [...prev, newRule]);
+  };
+
+  const editRecurringRule = async (r: RecurringRule) => {
+    if (!user) return;
+    const updated = await dbSaveRecurringRule(r);
+    setRecurringRules(prev => prev.map(rule => rule.id === r.id ? updated : rule));
+  };
+
+  const removeRecurringRule = async (id: string) => {
+    if (!user) return;
+    await dbDeleteRecurringRule(id);
+    setRecurringRules(prev => prev.filter(rule => rule.id !== id));
+  };
+
+  // Advances a YYYY-MM-DD date string by one occurrence of the given frequency.
+  const advanceDate = (dateStr: string, frequency: RecurringRule['frequency']): string => {
+    const d = new Date(dateStr + 'T00:00:00');
+    switch (frequency) {
+      case 'daily': d.setDate(d.getDate() + 1); break;
+      case 'weekly': d.setDate(d.getDate() + 7); break;
+      case 'biweekly': d.setDate(d.getDate() + 14); break;
+      case 'monthly': d.setMonth(d.getMonth() + 1); break;
+      case 'yearly': d.setFullYear(d.getFullYear() + 1); break;
+    }
+    return d.toISOString().split('T')[0];
+  };
+
+  // Auto-generates real transactions from active recurring rules whose nextDueDate has arrived.
+  // Runs once per session after rules and transactions have loaded. Catches up on any occurrences
+  // missed while the app was closed (e.g. a weekly rule not opened for 3 weeks creates 3 transactions),
+  // capped at 24 catch-up occurrences per rule per run as a safety limit against a data error causing
+  // a runaway loop, and stops early if an end date has passed.
+  useEffect(() => {
+    if (!user || !initialLoadComplete || recurringRules.length === 0) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const runDueRules = async () => {
+      for (const rule of recurringRules) {
+        if (!rule.isActive) continue;
+        let due = rule.nextDueDate;
+        let generatedAny = false;
+        let safetyCounter = 0;
+        while (due <= todayStr && safetyCounter < 24) {
+          if (rule.endDate && due > rule.endDate) break;
+          const newTx = await dbSaveTransaction({
+            userId: user.uid,
+            type: rule.type,
+            amount: rule.amount,
+            category: rule.category,
+            date: due,
+            notes: rule.notes,
+            tags: rule.tags,
+            paymentMethod: rule.paymentMethod,
+            accountId: rule.accountId,
+            accountName: rule.accountName,
+          } as Transaction);
+          setTransactions(prev => [newTx, ...prev]);
+          setAccounts(prev => prev.map(acc => {
+            if (acc.id === rule.accountId) {
+              return { ...acc, balance: acc.balance + (rule.type === 'Income' ? rule.amount : -rule.amount) };
+            }
+            return acc;
+          }));
+          due = advanceDate(due, rule.frequency);
+          generatedAny = true;
+          safetyCounter++;
+        }
+        if (generatedAny) {
+          const updatedRule = { ...rule, nextDueDate: due, lastGeneratedDate: todayStr };
+          await dbSaveRecurringRule(updatedRule);
+          setRecurringRules(prev => prev.map(r => r.id === rule.id ? updatedRule : r));
+        }
+      }
+    };
+
+    runDueRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialLoadComplete, user?.uid]);
+
   const refreshData = async () => {
     await fetchData();
   };
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
+      accounts, transactions, budgets, goals, notifications, recurringRules, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
       transferFunds, addBudget, editBudget, removeBudget, addGoal, editGoal, removeGoal,
-      markNotificationAsRead, updateSettings, refreshData
+      markNotificationAsRead, updateSettings, addRecurringRule, editRecurringRule, removeRecurringRule, refreshData
     }}>
       {children}
     </FinanceContext.Provider>
