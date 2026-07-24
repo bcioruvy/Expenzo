@@ -1,9 +1,17 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 dist-ssr/
+dev-dist/
+
+# Environment variables — never commit real secrets
 .env
 .env.local
 .env.*.local
+
+# Editor/OS
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -13,6 +21,8 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
+
+# Logs
 logs/
 *.log
 npm-debug.log*
