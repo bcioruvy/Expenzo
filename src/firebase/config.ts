@@ -3,7 +3,7 @@ import { initializeApp } from 'firebase/app';
 // @ts-ignore
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 // @ts-ignore
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 /**
  * FIREBASE CONFIGURATION
@@ -42,7 +42,23 @@ if (isFirebaseConfigured) {
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    // Enable offline persistence: Firestore caches data locally (IndexedDB) so the app can
+    // read previously-synced accounts/transactions/budgets with no connection, and any writes
+    // made offline (e.g. adding an expense with no signal) are queued locally and automatically
+    // synced to the server the next time connectivity is available — no data loss, no manual
+    // retry needed. persistentMultipleTabManager allows this to work correctly even if the app
+    // is open in more than one browser tab at once.
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      });
+    } catch (persistenceError: any) {
+      // Falls back to standard in-memory Firestore if persistence can't be enabled (e.g. private
+      // browsing mode, or a browser without IndexedDB support) — the app still works, just without
+      // offline capability, rather than failing to load entirely.
+      console.warn('Firestore offline persistence unavailable, falling back to in-memory mode:', persistenceError);
+      db = initializeFirestore(app, {});
+    }
     // Explicitly set local (IndexedDB-backed) persistence immediately on init, rather than
     // only when a "Remember me" login completes. This ensures every browser context — including
     // a fresh Safari tab opened by an iOS Shortcut — persists the session as durably as iOS
