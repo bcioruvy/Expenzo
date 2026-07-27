@@ -16,7 +16,8 @@ import {
   ChevronRight,
   User,
   Zap,
-  Wallet
+  Wallet,
+  Tags
 } from 'lucide-react';
 import { LogoMark } from '../shared/LogoMark';
 
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'transactions', label: 'Transactions', icon: Receipt },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'budgets', label: 'Budgets', icon: PieChart },
+    { id: 'categories', label: 'Categories', icon: Tags },
     { id: 'goals', label: 'Goals & Savings', icon: Target },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'smart', label: 'Smart Insights', icon: Zap },
