@@ -6,6 +6,7 @@ import { Transactions } from './components/transactions/Transactions';
 import { Accounts } from './components/accounts/Accounts';
 import { Analytics } from './components/analytics/Analytics';
 import { Budgets } from './components/budgets/Budgets';
+import { Categories } from './components/categories/Categories';
 import { Goals } from './components/goals/Goals';
 import { Reports } from './components/reports/Reports';
 import { SmartInsights } from './components/smart/SmartInsights';
@@ -44,6 +45,7 @@ export const App: React.FC = () => {
       case 'accounts': return <Accounts />;
       case 'analytics': return <Analytics />;
       case 'budgets': return <Budgets />;
+      case 'categories': return <Categories />;
       case 'goals': return <Goals />;
       case 'reports': return <Reports />;
       case 'smart': return <SmartInsights setActiveTab={setActiveTab} />;
