@@ -1,3 +1,15 @@
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  type: 'Income' | 'Expense';
+  icon: string; // lucide-react icon name, e.g. 'UtensilsCrossed'
+  isArchived: boolean; // "removed" categories are archived, not deleted, so old transactions keep their label
+  isDefault: boolean; // true for the built-in seeded categories, false for user-created ones
+  parentId?: string; // set on sub-categories — the id of their parent category
+  sortOrder: number;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
