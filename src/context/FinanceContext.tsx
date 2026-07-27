@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { 
-  Account, Transaction, Budget, Goal, AppNotification, UserSettings, SmartInsight, BillReminder, RecurringRule 
+  Account, Transaction, Budget, Goal, AppNotification, UserSettings, SmartInsight, BillReminder, RecurringRule, Category 
 } from '../types';
 import { 
   getAccounts, saveAccount as dbSaveAccount, deleteAccount as dbDeleteAccount,
@@ -11,8 +11,10 @@ import {
   getNotifications, markNotificationRead as dbMarkNotificationRead,
   getUserSettings, saveUserSettings as dbSaveUserSettings,
   getRecurringRules, saveRecurringRule as dbSaveRecurringRule, deleteRecurringRule as dbDeleteRecurringRule,
+  getCategories, saveCategory as dbSaveCategory, seedDefaultCategories,
   isServingMockDataUnintentionally
 } from '../firebase/db';
+import { buildSeedCategories } from '../utils/categoryIcons';
 import { formatCurrency } from '../utils/currency';
 import { getBudgetSpentAmount } from '../utils/chartData';
 
@@ -23,6 +25,7 @@ interface FinanceContextType {
   goals: Goal[];
   notifications: AppNotification[];
   recurringRules: RecurringRule[];
+  categories: Category[];
   settings: UserSettings;
   loading: boolean;
   initialLoadComplete: boolean;
@@ -62,6 +65,10 @@ interface FinanceContextType {
   addRecurringRule: (r: Omit<RecurringRule, 'id' | 'userId'>) => Promise<void>;
   editRecurringRule: (r: RecurringRule) => Promise<void>;
   removeRecurringRule: (id: string) => Promise<void>;
+  addCategory: (c: Omit<Category, 'id' | 'userId'>) => Promise<void>;
+  editCategory: (c: Category) => Promise<void>;
+  archiveCategory: (id: string) => Promise<void>;
+  restoreCategory: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -75,6 +82,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [goals, setGoals] = useState<Goal[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [recurringRules, setRecurringRules] = useState<RecurringRule[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
     userId: '', currency: 'PKR', language: 'English', theme: 'light', dateFormat: 'yyyy-MM-dd', enableNotifications: true, monthlyBudgetCap: 3500
   });
@@ -95,10 +103,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         getGoals(user.uid),
         getNotifications(user.uid),
         getUserSettings(user.uid),
-        getRecurringRules(user.uid)
+        getRecurringRules(user.uid),
+        getCategories(user.uid)
       ]);
 
-      const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes, recRes] = results;
+      const [accsRes, txsRes, bdgsRes, glsRes, notifsRes, setsRes, recRes, catsRes] = results;
       const errors: string[] = [];
 
       if (accsRes.status === 'fulfilled') setAccounts(accsRes.value);
@@ -122,6 +131,26 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (recRes.status === 'fulfilled') setRecurringRules(recRes.value);
       else { console.error('Failed to load recurring rules:', recRes.reason); errors.push(`Recurring Rules: ${recRes.reason?.message || recRes.reason}`); }
 
+      if (catsRes.status === 'fulfilled') {
+        if (catsRes.value.length === 0) {
+          // Brand-new user (or pre-existing user from before this feature) — seed the
+          // default category set once. Never re-seeds after this, since categories.length
+          // will be > 0 on every subsequent load.
+          try {
+            const seeded = await seedDefaultCategories(user.uid, buildSeedCategories());
+            setCategories(seeded);
+          } catch (seedErr) {
+            console.error('Failed to seed default categories:', seedErr);
+            setCategories([]);
+          }
+        } else {
+          setCategories(catsRes.value);
+        }
+      } else {
+        console.error('Failed to load categories:', catsRes.reason);
+        errors.push(`Categories: ${catsRes.reason?.message || catsRes.reason}`);
+      }
+
       setDataLoadErrorDetails(errors);
       setDataLoadError(errors.length > 0);
     } catch (err: any) {
@@ -144,6 +173,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setGoals([]);
       setNotifications([]);
       setRecurringRules([]);
+      setCategories([]);
       setLoading(false);
     }
   }, [user, fetchData]);
@@ -539,18 +569,50 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLoadComplete, user?.uid]);
 
+  const addCategory = async (c: Omit<Category, 'id' | 'userId'>) => {
+    if (!user) return;
+    const newCat = await dbSaveCategory({ ...c, userId: user.uid } as Category);
+    setCategories(prev => [...prev, newCat]);
+  };
+
+  const editCategory = async (c: Category) => {
+    if (!user) return;
+    const updated = await dbSaveCategory(c);
+    setCategories(prev => prev.map(cat => cat.id === c.id ? updated : cat));
+  };
+
+  // "Deleting" a category archives it rather than removing it — this keeps every existing
+  // transaction's category label intact and accurate, while hiding the category from
+  // pickers for new transactions going forward.
+  const archiveCategory = async (id: string) => {
+    if (!user) return;
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+    const updated = await dbSaveCategory({ ...cat, isArchived: true });
+    setCategories(prev => prev.map(c => c.id === id ? updated : c));
+  };
+
+  const restoreCategory = async (id: string) => {
+    if (!user) return;
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+    const updated = await dbSaveCategory({ ...cat, isArchived: false });
+    setCategories(prev => prev.map(c => c.id === id ? updated : c));
+  };
+
   const refreshData = async () => {
     await fetchData();
   };
 
   return (
     <FinanceContext.Provider value={{
-      accounts, transactions, budgets, goals, notifications, recurringRules, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
+      accounts, transactions, budgets, goals, notifications, recurringRules, categories, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
       transferFunds, addBudget, editBudget, removeBudget, addGoal, editGoal, removeGoal,
-      markNotificationAsRead, updateSettings, addRecurringRule, editRecurringRule, removeRecurringRule, refreshData
+      markNotificationAsRead, updateSettings, addRecurringRule, editRecurringRule, removeRecurringRule,
+      addCategory, editCategory, archiveCategory, restoreCategory, refreshData
     }}>
       {children}
     </FinanceContext.Provider>
