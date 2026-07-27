@@ -11,10 +11,11 @@ import {
   where, 
   orderBy, 
   limit,
-  addDoc
+  addDoc,
+  writeBatch
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured, firebaseInitError } from './config';
-import { Transaction, Account, Budget, Goal, AppNotification, UserSettings, ReportSummary, RecurringRule } from '../types';
+import { Transaction, Account, Budget, Goal, AppNotification, UserSettings, ReportSummary, RecurringRule, Category } from '../types';
 
 // True only when real-looking Firebase credentials were provided but initialization
 // genuinely failed — as opposed to isFirebaseConfigured being false because no
@@ -72,6 +73,7 @@ let mockNotifications: AppNotification[] = [
 ];
 
 let mockRecurringRules: RecurringRule[] = [];
+let mockCategories: Category[] = [];
 
 let mockSettings: UserSettings = {
   userId: 'mock-user-123',
@@ -289,6 +291,55 @@ export const deleteRecurringRule = async (id: string): Promise<void> => {
     return;
   }
   await deleteDoc(doc(db, 'recurringRules', id));
+};
+
+export const getCategories = async (userId: string): Promise<Category[]> => {
+  if (!isFirebaseConfigured || !db) return mockCategories;
+  const q = query(collection(db, 'categories'), where('userId', '==', userId));
+  const snap = await getDocs(q);
+  return snap.docs.map((doc: any) => ({ ...doc.data(), id: doc.id } as Category));
+};
+
+export const saveCategory = async (category: Category): Promise<Category> => {
+  if (!isFirebaseConfigured || !db) {
+    if (category.id) {
+      mockCategories = mockCategories.map(c => c.id === category.id ? category : c);
+      return category;
+    }
+    const newCat = { ...category, id: 'cat-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) };
+    mockCategories.push(newCat);
+    return newCat;
+  }
+  if (category.id) {
+    const docRef = doc(db, 'categories', category.id);
+    await updateDoc(docRef, { ...category });
+    return category;
+  } else {
+    const docRef = await addDoc(collection(db, 'categories'), { ...category });
+    return { ...category, id: docRef.id };
+  }
+};
+
+// Seeds a brand-new user's categories collection with the default set (with icons) in a
+// single batch write. Only called once, when getCategories returns an empty array for a
+// user — after that, the user's own Firestore data is authoritative and this is never
+// called again, so renames/archives/additions are never overwritten.
+export const seedDefaultCategories = async (userId: string, seeds: Array<Omit<Category, 'id' | 'userId'>>): Promise<Category[]> => {
+  if (!isFirebaseConfigured || !db) {
+    const seeded = seeds.map((s, i) => ({ ...s, id: 'cat-seed-' + i, userId } as Category));
+    mockCategories = [...mockCategories, ...seeded];
+    return seeded;
+  }
+  const batch = writeBatch(db);
+  const seeded: Category[] = [];
+  for (const seed of seeds) {
+    const docRef = doc(collection(db, 'categories'));
+    const fullCategory = { ...seed, userId } as Category;
+    batch.set(docRef, fullCategory);
+    seeded.push({ ...fullCategory, id: docRef.id });
+  }
+  await batch.commit();
+  return seeded;
 };
 
 export const getUserSettings = async (userId: string): Promise<UserSettings> => {
