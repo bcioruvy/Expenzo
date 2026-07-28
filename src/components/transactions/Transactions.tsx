@@ -23,10 +23,33 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
-import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../utils/categories';
+import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Transactions: React.FC = () => {
-  const { transactions, accounts, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings, deleteError, clearDeleteError } = useFinance();
+  const { transactions, accounts, categories, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings, deleteError, clearDeleteError } = useFinance();
+
+  // Category names for dropdowns, sorted so sub-categories appear directly under their
+  // parent. Active lists (for the Add/Edit form) exclude archived categories; "all" lists
+  // (for the filter dropdown) include archived ones, since you may still want to filter
+  // transactions by a category you've since retired.
+  const buildCategoryOptions = (type: 'Income' | 'Expense', includeArchived: boolean): string[] => {
+    const typeCategories = categories.filter(c => c.type === type && (includeArchived || !c.isArchived));
+    const parents = typeCategories.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+    const result: string[] = [];
+    parents.forEach(parent => {
+      result.push(parent.name);
+      typeCategories
+        .filter(c => c.parentId === parent.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .forEach(sub => result.push(sub.name));
+    });
+    return result;
+  };
+  const activeIncomeCategories = buildCategoryOptions('Income', false);
+  const activeExpenseCategories = buildCategoryOptions('Expense', false);
+  const allIncomeCategories = buildCategoryOptions('Income', true);
+  const allExpenseCategories = buildCategoryOptions('Expense', true);
+  const iconForCategoryName = (name: string) => resolveCategoryIcon(categories.find(c => c.name === name)?.icon || 'HelpCircle');
 
   // Filters & Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,10 +320,10 @@ export const Transactions: React.FC = () => {
           >
             <option value="All">All Categories</option>
             <optgroup label="Income Categories">
-              {INCOME_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {allIncomeCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
             <optgroup label="Expense Categories">
-              {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {allExpenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
           </select>
         </div>
@@ -415,7 +438,7 @@ export const Transactions: React.FC = () => {
                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold flex-shrink-0 shadow-sm ${
                             tx.type === 'Income' ? 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage border border-warm-sage/30' : 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta border border-warm-terracotta/30'
                           }`}>
-                            {tx.type === 'Income' ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />}
+                            {(() => { const CatIcon = iconForCategoryName(tx.category); return <CatIcon className="w-5 h-5" />; })()}
                           </div>
                           <div>
                             <p className="font-bold text-warm-text dark:text-warm-dark-text tracking-tight">{tx.category}</p>
@@ -554,7 +577,7 @@ export const Transactions: React.FC = () => {
                     value={formCategory} onChange={(e) => setFormCategory(e.target.value)}
                     className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                   >
-                    {(formType === 'Income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
+                    {(formType === 'Income' ? activeIncomeCategories : activeExpenseCategories).map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
