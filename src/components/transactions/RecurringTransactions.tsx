@@ -5,7 +5,7 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { Repeat, Plus, Pause, Play, Trash2, Edit3, Calendar } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
-import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../utils/categories';
+import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 const FREQUENCY_LABELS: Record<RecurringRule['frequency'], string> = {
   daily: 'Daily',
@@ -16,7 +16,7 @@ const FREQUENCY_LABELS: Record<RecurringRule['frequency'], string> = {
 };
 
 export const RecurringTransactions: React.FC = () => {
-  const { recurringRules, accounts, addRecurringRule, editRecurringRule, removeRecurringRule, settings } = useFinance();
+  const { recurringRules, accounts, categories, addRecurringRule, editRecurringRule, removeRecurringRule, settings } = useFinance();
 
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -112,7 +112,17 @@ export const RecurringTransactions: React.FC = () => {
     editRecurringRule({ ...rule, isActive: !rule.isActive });
   };
 
-  const categoryOptions = formType === 'Income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const buildCategoryOptions = (type: 'Income' | 'Expense'): string[] => {
+    const typeCategories = categories.filter(c => c.type === type && !c.isArchived);
+    const parents = typeCategories.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+    const result: string[] = [];
+    parents.forEach(parent => {
+      result.push(parent.name);
+      typeCategories.filter(c => c.parentId === parent.id).sort((a, b) => a.sortOrder - b.sortOrder).forEach(sub => result.push(sub.name));
+    });
+    return result;
+  };
+  const categoryOptions = buildCategoryOptions(formType);
 
   return (
     <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none p-6">
@@ -151,7 +161,11 @@ export const RecurringTransactions: React.FC = () => {
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   rule.type === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
                 }`}>
-                  <Repeat className="w-5 h-5" />
+                  {(() => {
+                    const cat = categories.find(c => c.name === rule.category);
+                    const CatIcon = resolveCategoryIcon(cat?.icon || 'Repeat');
+                    return <CatIcon className="w-5 h-5" />;
+                  })()}
                 </div>
                 <div className="min-w-0">
                   <p className="font-bold text-sm text-warm-text dark:text-warm-dark-text truncate">
