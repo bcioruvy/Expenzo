@@ -15,10 +15,21 @@ import {
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { getBudgetSpentAmount } from '../../utils/chartData';
-import { EXPENSE_CATEGORIES } from '../../utils/categories';
+import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Budgets: React.FC = () => {
-  const { budgets, addBudget, editBudget, removeBudget, settings, transactions } = useFinance();
+  const { budgets, addBudget, editBudget, removeBudget, settings, transactions, categories } = useFinance();
+
+  const expenseCategoryOptions: string[] = (() => {
+    const active = categories.filter(c => c.type === 'Expense' && !c.isArchived);
+    const parents = active.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+    const result: string[] = [];
+    parents.forEach(parent => {
+      result.push(parent.name);
+      active.filter(c => c.parentId === parent.id).sort((a, b) => a.sortOrder - b.sortOrder).forEach(sub => result.push(sub.name));
+    });
+    return result;
+  })();
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -267,7 +278,7 @@ export const Budgets: React.FC = () => {
                     value={bCategory} onChange={(e) => setBCategory(e.target.value)}
                     className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                   >
-                    {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {expenseCategoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               )}
