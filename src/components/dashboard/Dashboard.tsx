@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { getMonthlyIncomeExpense, getWeeklyCashFlow } from '../../utils/chartData';
-import { EXPENSE_CATEGORIES } from '../../utils/categories';
 import { EmptyState } from '../shared/EmptyState';
 import { BalanceBeamWidget } from './BalanceBeamWidget';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
@@ -79,8 +78,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
     topIncomeSources,
     isServingMockData,
     deleteError,
-    clearDeleteError
+    clearDeleteError,
+    categories
   } = useFinance();
+
+  // Builds a flat list of active category names for a given type, parents followed
+  // immediately by their sub-categories, for use in every category dropdown on this page.
+  const buildCategoryOptions = (type: 'Income' | 'Expense'): string[] => {
+    const active = categories.filter(c => c.type === type && !c.isArchived);
+    const parents = active.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+    const names: string[] = [];
+    parents.forEach(parent => {
+      names.push(parent.name);
+      active.filter(c => c.parentId === parent.id).sort((a, b) => a.sortOrder - b.sortOrder).forEach(sub => names.push(sub.name));
+    });
+    return names;
+  };
+  const dashboardIncomeCategories = buildCategoryOptions('Income');
+  const dashboardExpenseCategories = buildCategoryOptions('Expense');
 
   // Modals state
   const [showIncomeModal, setShowIncomeModal] = useState(false);
@@ -661,15 +676,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
                   value={txCategory} onChange={(e) => setTxCategory(e.target.value)}
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
-                  <option value="Salary">Salary</option>
-                  <option value="Bonus">Bonus</option>
-                  <option value="Overtime">Overtime</option>
-                  <option value="Freelance">Freelance</option>
-                  <option value="Investment Returns">Investment Returns</option>
-                  <option value="Rental Income">Rental Income</option>
-                  <option value="Gift Received">Gift Received</option>
-                  <option value="Refund">Refund</option>
-                  <option value="Other Income">Other Income</option>
+                  {dashboardIncomeCategories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
@@ -717,19 +724,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
                   value={txCategory} onChange={(e) => setTxCategory(e.target.value)}
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
-                  <option value="Food & Dining">Food & Dining</option>
-                  <option value="Groceries">Groceries</option>
-                  <option value="Transportation">Transportation</option>
-                  <option value="Fuel">Fuel</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Internet">Internet</option>
-                  <option value="Rent">Rent</option>
-                  <option value="Healthcare">Healthcare</option>
-                  <option value="Subscriptions">Subscriptions</option>
-                  <option value="Shopping">Shopping</option>
-                  <option value="Entertainment">Entertainment</option>
-                  <option value="Fitness">Fitness</option>
-                  <option value="Miscellaneous">Miscellaneous</option>
+                  {dashboardExpenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
@@ -825,10 +820,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
                   value={bCategory} onChange={(e) => setBCategory(e.target.value)}
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
                 >
-                  <option value="Food & Dining">Food & Dining</option>
-                  {EXPENSE_CATEGORIES.filter(c => c !== 'Food & Dining').map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                  {dashboardExpenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
