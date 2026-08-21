@@ -3,6 +3,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { Modal } from '../shared/Modal';
 import { RecurringTransactions } from './RecurringTransactions';
+import { ImportTransactionsModal } from './ImportTransactionsModal';
 import { 
   Search, 
   Filter, 
@@ -11,6 +12,7 @@ import {
   Trash2, 
   Edit3, 
   Download, 
+  Upload,
   ArrowUpRight, 
   ArrowDownRight, 
   CheckSquare, 
@@ -26,7 +28,7 @@ import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Transactions: React.FC = () => {
-  const { transactions, accounts, categories, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, settings, deleteError, clearDeleteError } = useFinance();
+  const { transactions, accounts, categories, addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, importTransactions, settings, deleteError, clearDeleteError } = useFinance();
 
   // Category names for dropdowns, sorted so sub-categories appear directly under their
   // parent. Active lists (for the Add/Edit form) exclude archived categories; "all" lists
@@ -67,6 +69,7 @@ export const Transactions: React.FC = () => {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
@@ -280,6 +283,14 @@ export const Transactions: React.FC = () => {
           >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
+          </button>
+
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="flex-1 lg:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Import</span>
           </button>
           
           <button
@@ -659,6 +670,15 @@ export const Transactions: React.FC = () => {
 
             </form>
         </Modal>
+      )}
+
+      {showImportModal && (
+        <ImportTransactionsModal
+          accounts={accounts}
+          expenseCategories={activeExpenseCategories}
+          onClose={() => setShowImportModal(false)}
+          onImport={importTransactions}
+        />
       )}
 
     </div>
