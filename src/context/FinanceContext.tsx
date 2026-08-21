@@ -12,6 +12,7 @@ import {
   getUserSettings, saveUserSettings as dbSaveUserSettings,
   getRecurringRules, saveRecurringRule as dbSaveRecurringRule, deleteRecurringRule as dbDeleteRecurringRule,
   getCategories, saveCategory as dbSaveCategory, seedDefaultCategories,
+  bulkAddTransactions,
   isServingMockDataUnintentionally
 } from '../firebase/db';
 import { buildSeedCategories } from '../utils/categoryIcons';
@@ -50,6 +51,7 @@ interface FinanceContextType {
   editTransaction: (tx: Transaction) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
   removeMultipleTransactions: (ids: string[]) => Promise<void>;
+  importTransactions: (txs: Array<Omit<Transaction, 'id' | 'userId'>>) => Promise<number>;
   addAccount: (acc: Omit<Account, 'id' | 'userId'>) => Promise<void>;
   editAccount: (acc: Account) => Promise<void>;
   removeAccount: (id: string) => Promise<void>;
@@ -381,6 +383,35 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // Bulk-imports many transactions at once (e.g. from the "Import from Google Sheet" flow),
+  // then updates and PERSISTS the affected account balance(s) to Firestore via dbSaveAccount
+  // (not just local state), so the correct balance survives a reload. Returns the number of
+  // transactions successfully imported.
+  const importTransactions = async (txs: Array<Omit<Transaction, 'id' | 'userId'>>): Promise<number> => {
+    if (!user || txs.length === 0) return 0;
+    const withUser = txs.map(t => ({ ...t, userId: user.uid })) as Array<Omit<Transaction, 'id'>>;
+    const created = await bulkAddTransactions(withUser);
+    setTransactions(prev => [...created, ...prev]);
+
+    // Sum up the net balance change per account touched by this import
+    const deltaByAccount = new Map<string, number>();
+    for (const tx of created) {
+      const delta = tx.type === 'Income' ? tx.amount : -tx.amount;
+      deltaByAccount.set(tx.accountId, (deltaByAccount.get(tx.accountId) || 0) + delta);
+    }
+
+    for (const [accId, delta] of deltaByAccount) {
+      const acc = accounts.find(a => a.id === accId);
+      if (acc) {
+        const updatedAcc = { ...acc, balance: acc.balance + delta };
+        await dbSaveAccount(updatedAcc);
+        setAccounts(prev => prev.map(a => a.id === accId ? updatedAcc : a));
+      }
+    }
+
+    return created.length;
+  };
+
   const addAccount = async (acc: Omit<Account, 'id' | 'userId'>) => {
     if (!user) return;
     const newAcc = await dbSaveAccount({ ...acc, userId: user.uid } as Account);
@@ -609,7 +640,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       accounts, transactions, budgets, goals, notifications, recurringRules, categories, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
       currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
-      addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, addAccount, editAccount, removeAccount,
+      addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, importTransactions, addAccount, editAccount, removeAccount,
       transferFunds, addBudget, editBudget, removeBudget, addGoal, editGoal, removeGoal,
       markNotificationAsRead, updateSettings, addRecurringRule, editRecurringRule, removeRecurringRule,
       addCategory, editCategory, archiveCategory, restoreCategory, refreshData
