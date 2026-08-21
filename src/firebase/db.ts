@@ -342,6 +342,42 @@ export const seedDefaultCategories = async (userId: string, seeds: Array<Omit<Ca
   return seeded;
 };
 
+// Bulk-writes many transactions in one or more Firestore batches (max 400 docs per batch,
+// under Firestore's 500-operation limit). Used by the "Import from Google Sheet" flow on
+// the Transactions page so months of historical data can be dropped in without the
+// per-row round-trips addTransaction() would otherwise do.
+export const bulkAddTransactions = async (
+  transactions: Array<Omit<Transaction, 'id'>>
+): Promise<Transaction[]> => {
+  if (!isFirebaseConfigured || !db) {
+    const created = transactions.map((t, i) => (
+      { ...t, id: 'tx-import-' + Date.now() + '-' + i } as Transaction
+    ));
+    mockTransactions = [...created, ...mockTransactions];
+    return created;
+  }
+
+  const CHUNK_SIZE = 400;
+  const created: Transaction[] = [];
+
+  for (let i = 0; i < transactions.length; i += CHUNK_SIZE) {
+    const chunk = transactions.slice(i, i + CHUNK_SIZE);
+    const batch = writeBatch(db);
+    const chunkRefs: Array<{ id: string; tx: Omit<Transaction, 'id'> }> = [];
+
+    for (const tx of chunk) {
+      const docRef = doc(collection(db, 'transactions'));
+      batch.set(docRef, tx);
+      chunkRefs.push({ id: docRef.id, tx });
+    }
+
+    await batch.commit();
+    chunkRefs.forEach(({ id, tx }) => created.push({ ...tx, id } as Transaction));
+  }
+
+  return created;
+};
+
 export const getUserSettings = async (userId: string): Promise<UserSettings> => {
   if (!isFirebaseConfigured || !db) return mockSettings;
   const docRef = doc(db, 'settings', userId);
