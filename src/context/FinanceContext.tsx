@@ -329,36 +329,83 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const upcomingBills: BillReminder[] = [];
 
   // Action methods
+  // NOTE: previously this only updated the account balance in local React state and never
+  // wrote it back to Firestore — meaning the change looked right until the next reload or
+  // refetch, when the old (unchanged) stored balance silently came back. Now persists via
+  // dbSaveAccount so the balance survives a reload, matching how importTransactions works.
   const addTransaction = async (tx: Omit<Transaction, 'id' | 'userId'>) => {
     if (!user) return;
     const newTx = await dbSaveTransaction({ ...tx, userId: user.uid } as Transaction);
     setTransactions(prev => [newTx, ...prev]);
-    // update local account balance
-    setAccounts(prev => prev.map(acc => {
-      if (acc.id === tx.accountId) {
-        return { ...acc, balance: acc.balance + (tx.type === 'Income' ? tx.amount : -tx.amount) };
-      }
-      return acc;
-    }));
+
+    const acc = accounts.find(a => a.id === tx.accountId);
+    if (acc) {
+      const delta = tx.type === 'Income' ? tx.amount : -tx.amount;
+      const updatedAcc = { ...acc, balance: acc.balance + delta };
+      await dbSaveAccount(updatedAcc);
+      setAccounts(prev => prev.map(a => a.id === acc.id ? updatedAcc : a));
+    }
   };
 
+  // Persists the balance adjustment directly (reversing the old transaction's effect and
+  // applying the new one) instead of calling fetchData(), since fetchData() only re-reads
+  // whatever is currently stored in Firestore — which, before this fix, was never actually
+  // updated by a plain add/edit, so refetching just redisplayed the same stale number.
   const editTransaction = async (tx: Transaction) => {
     if (!user) return;
     const oldTx = transactions.find(t => t.id === tx.id);
     const updated = await dbSaveTransaction(tx);
     setTransactions(prev => prev.map(t => t.id === tx.id ? updated : t));
-    // adjust account balances if amount or type changed
-    if (oldTx && (oldTx.amount !== tx.amount || oldTx.type !== tx.type || oldTx.accountId !== tx.accountId)) {
-      await fetchData(); // refresh to keep accurate
+
+    if (oldTx) {
+      const oldDelta = oldTx.type === 'Income' ? oldTx.amount : -oldTx.amount;
+      const newDelta = tx.type === 'Income' ? tx.amount : -tx.amount;
+
+      if (oldTx.accountId === tx.accountId) {
+        const netChange = newDelta - oldDelta;
+        if (netChange !== 0) {
+          const acc = accounts.find(a => a.id === tx.accountId);
+          if (acc) {
+            const updatedAcc = { ...acc, balance: acc.balance + netChange };
+            await dbSaveAccount(updatedAcc);
+            setAccounts(prev => prev.map(a => a.id === acc.id ? updatedAcc : a));
+          }
+        }
+      } else {
+        // Account changed: reverse the old effect on the old account, apply the new
+        // effect on the new account.
+        const oldAcc = accounts.find(a => a.id === oldTx.accountId);
+        if (oldAcc) {
+          const updatedOldAcc = { ...oldAcc, balance: oldAcc.balance - oldDelta };
+          await dbSaveAccount(updatedOldAcc);
+          setAccounts(prev => prev.map(a => a.id === oldAcc.id ? updatedOldAcc : a));
+        }
+        const newAcc = accounts.find(a => a.id === tx.accountId);
+        if (newAcc) {
+          const updatedNewAcc = { ...newAcc, balance: newAcc.balance + newDelta };
+          await dbSaveAccount(updatedNewAcc);
+          setAccounts(prev => prev.map(a => a.id === newAcc.id ? updatedNewAcc : a));
+        }
+      }
     }
   };
 
   const removeTransaction = async (id: string) => {
     if (!user) return;
     try {
+      const tx = transactions.find(t => t.id === id);
       await dbDeleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
-      await fetchData(); // refresh balances
+
+      if (tx) {
+        const acc = accounts.find(a => a.id === tx.accountId);
+        if (acc) {
+          const reversedDelta = tx.type === 'Income' ? -tx.amount : tx.amount;
+          const updatedAcc = { ...acc, balance: acc.balance + reversedDelta };
+          await dbSaveAccount(updatedAcc);
+          setAccounts(prev => prev.map(a => a.id === acc.id ? updatedAcc : a));
+        }
+      }
       setDeleteError(null);
     } catch (err: any) {
       console.error('Failed to delete transaction:', err);
@@ -366,16 +413,30 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Deletes multiple transactions, then refreshes balances exactly once at the end.
-  // Deleting one-by-one with a refetch after each caused a race condition where
-  // in-flight refetches could overwrite state mid-loop, sometimes skipping or
-  // mismatching which transaction actually got removed.
+  // Deletes multiple transactions, then persists each affected account's balance exactly
+  // once at the end (grouped by account) — same batching approach as importTransactions,
+  // and avoids the old fetchData()-per-loop race condition while now actually persisting
+  // the result instead of just re-reading stale data.
   const removeMultipleTransactions = async (ids: string[]) => {
     if (!user || ids.length === 0) return;
     try {
+      const txsToDelete = transactions.filter(t => ids.includes(t.id));
       await Promise.all(ids.map(id => dbDeleteTransaction(id)));
       setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
-      await fetchData(); // refresh balances once, after all deletes have completed
+
+      const deltaByAccount = new Map<string, number>();
+      for (const tx of txsToDelete) {
+        const reversedDelta = tx.type === 'Income' ? -tx.amount : tx.amount;
+        deltaByAccount.set(tx.accountId, (deltaByAccount.get(tx.accountId) || 0) + reversedDelta);
+      }
+      for (const [accId, delta] of deltaByAccount) {
+        const acc = accounts.find(a => a.id === accId);
+        if (acc) {
+          const updatedAcc = { ...acc, balance: acc.balance + delta };
+          await dbSaveAccount(updatedAcc);
+          setAccounts(prev => prev.map(a => a.id === accId ? updatedAcc : a));
+        }
+      }
       setDeleteError(null);
     } catch (err: any) {
       console.error('Failed to delete transactions:', err);
