@@ -112,7 +112,14 @@ export const Categories: React.FC = () => {
     const subCats = isSub ? [] : getSubCategories(cat.id);
     const hasSubCats = subCats.length > 0;
     const isExpanded = expandedIds.has(cat.id);
-    const total = totalsByCategory[cat.name] || 0;
+    // A parent category's total is its own direct spend PLUS everything recorded under
+    // its subcategories — a transaction's `category` field is set to whichever specific
+    // category (parent or sub) was picked, never both, so without this the parent row
+    // would only ever show spend from transactions filed directly against it.
+    const ownTotal = totalsByCategory[cat.name] || 0;
+    const total = hasSubCats
+      ? ownTotal + subCats.reduce((sum, sub) => sum + (totalsByCategory[sub.name] || 0), 0)
+      : ownTotal;
 
     return (
       <div key={cat.id}>
