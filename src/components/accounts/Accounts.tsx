@@ -15,13 +15,14 @@ import {
   TrendingUp, 
   Check, 
   X,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY, CURRENCY_OPTIONS } from '../../utils/currency';
 import { EmptyState } from '../shared/EmptyState';
 
 export const Accounts: React.FC = () => {
-  const { accounts, addAccount, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
+  const { accounts, transactions, addAccount, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
 
   // Modal state for Add/Edit Account
   const [showAccModal, setShowAccModal] = useState(false);
@@ -51,6 +52,32 @@ export const Accounts: React.FC = () => {
       case 'Wallet': return Smartphone;
       case 'Cash': return DollarSign;
       default: return Wallet;
+    }
+  };
+
+  // Recomputes an account's balance as the sum of every transaction recorded against it
+  // (income adds, expense subtracts) and overwrites the stored balance with that true
+  // figure. Needed because the account balance is a running total nudged by individual
+  // transaction deltas, not something recalculated from scratch on every change — so if
+  // a balance ever drifted out of sync with reality (e.g. from an older version of the
+  // app), simply re-saving a transaction won't fix it; this recomputes it properly.
+  const handleRecalculateBalance = (acc: Account) => {
+    const trueBalance = transactions
+      .filter(t => t.accountId === acc.id)
+      .reduce((sum, t) => sum + (t.type === 'Income' ? t.amount : -t.amount), 0);
+
+    if (trueBalance === acc.balance) {
+      window.alert(`${acc.name}'s balance is already correct: ${formatCurrency(acc.balance, acc.currency)}.`);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Recalculate ${acc.name}'s balance from its transaction history?\n\n` +
+      `Currently stored: ${formatCurrency(acc.balance, acc.currency)}\n` +
+      `Will be corrected to: ${formatCurrency(trueBalance, acc.currency)}`
+    );
+    if (confirmed) {
+      editAccount({ ...acc, balance: trueBalance });
     }
   };
 
@@ -205,6 +232,13 @@ export const Accounts: React.FC = () => {
                 </span>
                 
                 <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => handleRecalculateBalance(acc)} 
+                    title="Recalculate balance from transaction history"
+                    className="p-2 text-warm-dark-muted hover:text-warm-sage hover:bg-warm-sage/10 rounded-xl transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => openEditModal(acc)} 
                     title="Edit Account"
