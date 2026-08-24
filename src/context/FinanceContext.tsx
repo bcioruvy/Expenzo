@@ -55,7 +55,7 @@ interface FinanceContextType {
   addAccount: (acc: Omit<Account, 'id' | 'userId'>) => Promise<void>;
   editAccount: (acc: Account) => Promise<void>;
   removeAccount: (id: string) => Promise<void>;
-  transferFunds: (fromAccId: string, toAccId: string, amount: number, notes?: string) => Promise<void>;
+  transferFunds: (fromAccId: string, toAccId: string, amount: number, notes?: string, date?: string) => Promise<void>;
   addBudget: (b: Omit<Budget, 'id' | 'userId'>) => Promise<void>;
   editBudget: (b: Budget) => Promise<void>;
   removeBudget: (id: string) => Promise<void>;
@@ -497,13 +497,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const transferFunds = async (fromAccId: string, toAccId: string, amount: number, notes?: string) => {
+  const transferFunds = async (fromAccId: string, toAccId: string, amount: number, notes?: string, date?: string) => {
     if (!user) return;
     const fromAcc = accounts.find(a => a.id === fromAccId);
     const toAcc = accounts.find(a => a.id === toAccId);
     if (!fromAcc || !toAcc) return;
 
-    const dateStr = new Date().toISOString().split('T')[0];
+    // Defaults to today when no date is passed, but callers (e.g. the Transfer Funds
+    // modal) can supply a past date so historical transfers — like a cash withdrawal
+    // that actually happened last week — aren't misdated as happening today.
+    const dateStr = date || new Date().toISOString().split('T')[0];
     // Create expense from source account
     await addTransaction({
       type: 'Expense',
