@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Category } from '../../types';
 import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { resolveCategoryIcon, AVAILABLE_ICON_NAMES } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/currency';
-import { Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Archive, ArchiveRestore, Edit3, Tags, Check } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check } from 'lucide-react';
 
 export const Categories: React.FC = () => {
   const { categories, transactions, settings, addCategory, editCategory, archiveCategory, restoreCategory } = useFinance();
@@ -113,30 +113,101 @@ export const Categories: React.FC = () => {
     resetForm();
   };
 
-  // Swaps sortOrder between a category and its adjacent sibling (within the same level —
-  // top-level categories reorder among each other, subcategories reorder within their
-  // parent), then persists both via editCategory. parentCategories/getSubCategories
-  // already sort by sortOrder, so this directly controls the display order on this page
-  // (and anywhere else category order is used, e.g. dropdowns).
-  const handleMoveCategory = (cat: Category, direction: 'up' | 'down') => {
-    const siblings = cat.parentId ? getSubCategories(cat.parentId) : parentCategories;
-    const idx = siblings.findIndex(c => c.id === cat.id);
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (idx === -1 || swapIdx < 0 || swapIdx >= siblings.length) return;
-    const other = siblings[swapIdx];
-    editCategory({ ...cat, sortOrder: other.sortOrder });
-    editCategory({ ...other, sortOrder: cat.sortOrder });
+  // --- Drag-to-reorder ---
+  // Built on the Pointer Events API rather than native HTML5 drag-and-drop, which has
+  // unreliable touch support in mobile Safari — this works consistently on iPad.
+  //
+  // The sibling group is LOCKED during a drag: a row can only be dropped among rows that
+  // share the same parentId (subcategories only reorder within their own parent; top-level
+  // categories only reorder among other top-level categories), so there is no way to
+  // accidentally re-parent a subcategory or nest a top-level category by dragging.
+  const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const setRowRef = (id: string) => (el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(id, el);
+    else rowRefs.current.delete(id);
   };
+
+  const [draggedCat, setDraggedCat] = useState<Category | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<'above' | 'below'>('below');
+
+  const handleDragPointerDown = (e: React.PointerEvent, cat: Category) => {
+    if (cat.isArchived) return;
+    e.preventDefault();
+    setDraggedCat(cat);
+  };
+
+  // Window-level listeners (rather than relying on setPointerCapture) so the drag keeps
+  // tracking correctly even as the finger moves across the whole screen — this is the
+  // more reliable pattern across Safari/iPadOS versions.
+  useEffect(() => {
+    if (!draggedCat) return;
+
+    const handleMove = (e: PointerEvent) => {
+      e.preventDefault();
+      let closestId: string | null = null;
+      let closestPosition: 'above' | 'below' = 'below';
+      let closestDist = Infinity;
+
+      rowRefs.current.forEach((el, id) => {
+        if (id === draggedCat.id) return;
+        const sibling = categories.find(c => c.id === id);
+        // Lock to the same sibling group: same parent (undefined === undefined for
+        // top-level) and same Income/Expense type.
+        if (!sibling || sibling.parentId !== draggedCat.parentId || sibling.type !== draggedCat.type) return;
+
+        const rect = el.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const dist = Math.abs(e.clientY - midY);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestId = id;
+          closestPosition = e.clientY < midY ? 'above' : 'below';
+        }
+      });
+
+      setDragOverId(closestId);
+      setDragOverPosition(closestPosition);
+    };
+
+    const handleUp = () => {
+      if (dragOverId && dragOverId !== draggedCat.id) {
+        const siblings = draggedCat.parentId ? getSubCategories(draggedCat.parentId) : parentCategories;
+        const withoutDragged = siblings.filter(c => c.id !== draggedCat.id);
+        const targetIdx = withoutDragged.findIndex(c => c.id === dragOverId);
+        const insertIdx = dragOverPosition === 'above' ? targetIdx : targetIdx + 1;
+
+        const reordered = [...withoutDragged];
+        reordered.splice(insertIdx, 0, draggedCat);
+
+        // Persist sequential sortOrder for the whole sibling group — only the rows whose
+        // position actually changed get written, to avoid needless network calls.
+        reordered.forEach((c, idx) => {
+          if (c.sortOrder !== idx) {
+            editCategory({ ...c, sortOrder: idx });
+          }
+        });
+      }
+      setDraggedCat(null);
+      setDragOverId(null);
+    };
+
+    window.addEventListener('pointermove', handleMove, { passive: false });
+    window.addEventListener('pointerup', handleUp);
+    window.addEventListener('pointercancel', handleUp);
+    return () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draggedCat, dragOverId, dragOverPosition]);
 
   const renderCategoryRow = (cat: Category, isSub: boolean) => {
     const Icon = resolveCategoryIcon(cat.icon);
     const subCats = isSub ? [] : getSubCategories(cat.id);
     const hasSubCats = subCats.length > 0;
     const isExpanded = expandedIds.has(cat.id);
-    const siblings = isSub ? getSubCategories(cat.parentId!) : parentCategories;
-    const siblingIndex = siblings.findIndex(c => c.id === cat.id);
-    const isFirstSibling = siblingIndex === 0;
-    const isLastSibling = siblingIndex === siblings.length - 1;
     // A parent category's total is its own direct spend PLUS everything recorded under
     // its subcategories — a transaction's `category` field is set to whichever specific
     // category (parent or sub) was picked, never both, so without this the parent row
@@ -146,14 +217,24 @@ export const Categories: React.FC = () => {
       ? ownTotal + subCats.reduce((sum, sub) => sum + (totalsByCategory[sub.name] || 0), 0)
       : ownTotal;
 
+    const isDragged = draggedCat?.id === cat.id;
+    const isDragOverTarget = dragOverId === cat.id;
+
     return (
       <div key={cat.id}>
         <div
+          ref={setRowRef(cat.id)}
           className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
             cat.isArchived
               ? 'bg-warm-surface/40 dark:bg-warm-dark-surface/20 border-warm-surface dark:border-warm-dark-surface opacity-60'
               : 'bg-warm-bg dark:bg-warm-dark-bg border-warm-surface dark:border-warm-dark-surface'
-          } ${isSub ? 'ml-10 mt-2' : ''}`}
+          } ${isSub ? 'ml-10 mt-2' : ''} ${isDragged ? 'opacity-40 shadow-lg scale-[0.98]' : ''} ${
+            isDragOverTarget && !isDragged
+              ? dragOverPosition === 'above'
+                ? 'border-t-2 border-t-warm-sage'
+                : 'border-b-2 border-b-warm-sage'
+              : ''
+          }`}
         >
           <div className="flex items-center space-x-3 min-w-0 flex-1">
             {!isSub && hasSubCats && (
@@ -178,26 +259,6 @@ export const Categories: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center space-x-1.5 flex-shrink-0 ml-3">
-            {!cat.isArchived && (
-              <div className="flex items-center">
-                <button
-                  onClick={() => handleMoveCategory(cat, 'up')}
-                  disabled={isFirstSibling}
-                  title="Move up"
-                  className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <ArrowUp className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleMoveCategory(cat, 'down')}
-                  disabled={isLastSibling}
-                  title="Move down"
-                  className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <ArrowDown className="w-4 h-4" />
-                </button>
-              </div>
-            )}
             {!isSub && !cat.isArchived && (
               <button onClick={() => openAddSubModal(cat)} title="Add sub-category" className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors">
                 <Plus className="w-4 h-4" />
@@ -213,6 +274,15 @@ export const Categories: React.FC = () => {
             ) : (
               <button onClick={() => archiveCategory(cat.id)} title="Archive" className="p-2 rounded-xl hover:bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta transition-colors">
                 <Archive className="w-4 h-4" />
+              </button>
+            )}
+            {!cat.isArchived && (
+              <button
+                onPointerDown={(e) => handleDragPointerDown(e, cat)}
+                title="Drag to reorder"
+                className="p-2 -mr-1 rounded-xl text-warm-muted dark:text-warm-dark-muted touch-none cursor-grab active:cursor-grabbing hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors"
+              >
+                <GripVertical className="w-4 h-4" />
               </button>
             )}
           </div>
