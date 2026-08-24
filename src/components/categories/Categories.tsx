@@ -5,7 +5,7 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { resolveCategoryIcon, AVAILABLE_ICON_NAMES } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/currency';
-import { Plus, ChevronDown, ChevronRight, Archive, ArchiveRestore, Edit3, Tags, Check } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, ArrowUp, ArrowDown, Archive, ArchiveRestore, Edit3, Tags, Check } from 'lucide-react';
 
 export const Categories: React.FC = () => {
   const { categories, transactions, settings, addCategory, editCategory, archiveCategory, restoreCategory } = useFinance();
@@ -23,10 +23,16 @@ export const Categories: React.FC = () => {
 
   // All-time spent/earned total per category name, computed directly from transactions —
   // this is intentionally all-time (not month-scoped) since the Categories page is about
-  // understanding a category overall, not a specific month's activity.
+  // understanding a category overall, not a specific month's activity. Internal transfers
+  // (money moved between the user's own accounts, e.g. a bank-to-cash withdrawal) are
+  // excluded — same rule used everywhere else totals are computed (Dashboard, Reports,
+  // Analytics) — so a "Transfer" category, if one exists, never shows inflated totals.
+  const isInternalTransfer = (t: typeof transactions[number]) =>
+    t.category === 'Transfer' && (t.tags || []).includes('internal');
+
   const totalsByCategory = useMemo(() => {
     const totals: Record<string, number> = {};
-    transactions.forEach(t => {
+    transactions.filter(t => !isInternalTransfer(t)).forEach(t => {
       totals[t.category] = (totals[t.category] || 0) + t.amount;
     });
     return totals;
@@ -107,11 +113,30 @@ export const Categories: React.FC = () => {
     resetForm();
   };
 
+  // Swaps sortOrder between a category and its adjacent sibling (within the same level —
+  // top-level categories reorder among each other, subcategories reorder within their
+  // parent), then persists both via editCategory. parentCategories/getSubCategories
+  // already sort by sortOrder, so this directly controls the display order on this page
+  // (and anywhere else category order is used, e.g. dropdowns).
+  const handleMoveCategory = (cat: Category, direction: 'up' | 'down') => {
+    const siblings = cat.parentId ? getSubCategories(cat.parentId) : parentCategories;
+    const idx = siblings.findIndex(c => c.id === cat.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= siblings.length) return;
+    const other = siblings[swapIdx];
+    editCategory({ ...cat, sortOrder: other.sortOrder });
+    editCategory({ ...other, sortOrder: cat.sortOrder });
+  };
+
   const renderCategoryRow = (cat: Category, isSub: boolean) => {
     const Icon = resolveCategoryIcon(cat.icon);
     const subCats = isSub ? [] : getSubCategories(cat.id);
     const hasSubCats = subCats.length > 0;
     const isExpanded = expandedIds.has(cat.id);
+    const siblings = isSub ? getSubCategories(cat.parentId!) : parentCategories;
+    const siblingIndex = siblings.findIndex(c => c.id === cat.id);
+    const isFirstSibling = siblingIndex === 0;
+    const isLastSibling = siblingIndex === siblings.length - 1;
     // A parent category's total is its own direct spend PLUS everything recorded under
     // its subcategories — a transaction's `category` field is set to whichever specific
     // category (parent or sub) was picked, never both, so without this the parent row
@@ -153,6 +178,26 @@ export const Categories: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center space-x-1.5 flex-shrink-0 ml-3">
+            {!cat.isArchived && (
+              <div className="flex items-center">
+                <button
+                  onClick={() => handleMoveCategory(cat, 'up')}
+                  disabled={isFirstSibling}
+                  title="Move up"
+                  className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleMoveCategory(cat, 'down')}
+                  disabled={isLastSibling}
+                  title="Move down"
+                  className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </button>
+              </div>
+            )}
             {!isSub && !cat.isArchived && (
               <button onClick={() => openAddSubModal(cat)} title="Add sub-category" className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors">
                 <Plus className="w-4 h-4" />
