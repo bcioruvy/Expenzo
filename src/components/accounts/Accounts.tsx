@@ -42,6 +42,7 @@ export const Accounts: React.FC = () => {
   const [transTo, setTransTo] = useState(accounts[1]?.id || '');
   const [transAmount, setTransAmount] = useState('');
   const [transNotes, setTransNotes] = useState('');
+  const [transDate, setTransDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Icon selector based on account type
   const getAccountIcon = (type: AccountType) => {
@@ -132,10 +133,11 @@ export const Accounts: React.FC = () => {
       alert('Source and target accounts must be different.');
       return;
     }
-    await transferFunds(transFrom, transTo, parseFloat(transAmount), transNotes);
+    await transferFunds(transFrom, transTo, parseFloat(transAmount), transNotes, transDate);
     setShowTransferModal(false);
     setTransAmount('');
     setTransNotes('');
+    setTransDate(new Date().toISOString().split('T')[0]);
   };
 
   return (
@@ -165,7 +167,7 @@ export const Accounts: React.FC = () => {
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           <button
-            onClick={() => { setTransFrom(accounts[0]?.id || ''); setTransTo(accounts[1]?.id || ''); setShowTransferModal(true); }}
+            onClick={() => { setTransFrom(accounts[0]?.id || ''); setTransTo(accounts[1]?.id || ''); setTransDate(new Date().toISOString().split('T')[0]); setShowTransferModal(true); }}
             className="px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center space-x-2 transition-colors shadow-sm"
           >
             <ArrowRightLeft className="w-4 h-4 text-warm-sage" />
@@ -367,6 +369,14 @@ export const Accounts: React.FC = () => {
                 <input 
                   type="number" step="0.01" required value={transAmount} onChange={(e) => setTransAmount(e.target.value)} placeholder="500.00"
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Date</label>
+                <input 
+                  type="date" required value={transDate} onChange={(e) => setTransDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm" 
                 />
               </div>
               <div>
