@@ -113,6 +113,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
   const [transTo, setTransTo] = useState(accounts[1]?.id || '');
   const [transAmount, setTransAmount] = useState('');
   const [transNotes, setTransNotes] = useState('');
+  const [transDate, setTransDate] = useState(new Date().toISOString().split('T')[0]);
 
   const [bName, setBName] = useState('');
 
@@ -267,10 +268,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
 
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
-    await transferFunds(transFrom, transTo, parseFloat(transAmount), transNotes);
+    await transferFunds(transFrom, transTo, parseFloat(transAmount), transNotes, transDate);
     setShowTransferModal(false);
     setTransAmount('');
     setTransNotes('');
+    setTransDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleCreateBudget = async (e: React.FormEvent) => {
@@ -782,6 +784,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
                 <input 
                   type="number" step="0.01" required value={transAmount} onChange={(e) => setTransAmount(e.target.value)} placeholder="500.00"
                   className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Date</label>
+                <input 
+                  type="date" required value={transDate} onChange={(e) => setTransDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm" 
                 />
               </div>
               <div>
