@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction } from '../../types';
 import { Modal } from '../shared/Modal';
@@ -22,6 +22,8 @@ import {
   CreditCard,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
@@ -62,7 +64,8 @@ export const Transactions: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [pageInputValue, setPageInputValue] = useState('1');
 
   // Bulk Actions state
   const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
@@ -126,7 +129,29 @@ export const Transactions: React.FC = () => {
   const currentTransactions = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredTransactions.slice(start, start + itemsPerPage);
-  }, [filteredTransactions, currentPage]);
+  }, [filteredTransactions, currentPage, itemsPerPage]);
+
+  // Keep the "Go to page" input in sync with the real current page (e.g. after using the
+  // arrow/first/last buttons), and clamp currentPage if filtering or a page-size change
+  // leaves it pointing past the new last page.
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    } else {
+      setPageInputValue(String(currentPage));
+    }
+  }, [currentPage, totalPages]);
+
+  const handleJumpToPage = () => {
+    const parsed = parseInt(pageInputValue, 10);
+    if (isNaN(parsed)) {
+      setPageInputValue(String(currentPage));
+      return;
+    }
+    const clamped = Math.min(Math.max(parsed, 1), totalPages);
+    setCurrentPage(clamped);
+    setPageInputValue(String(clamped));
+  };
 
   // Bulk selection toggle
   const toggleSelectAll = () => {
@@ -514,23 +539,68 @@ export const Transactions: React.FC = () => {
         </div>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-warm-surface dark:border-warm-dark-surface/60 flex items-center justify-between bg-warm-bg/50 dark:bg-warm-dark-bg/40 text-xs text-warm-muted dark:text-warm-dark-muted">
-          <span>Showing {currentTransactions.length} of {filteredTransactions.length} transactions</span>
+        <div className="p-4 border-t border-warm-surface dark:border-warm-dark-surface/60 flex flex-col sm:flex-row items-center justify-between gap-3 bg-warm-bg/50 dark:bg-warm-dark-bg/40 text-xs text-warm-muted dark:text-warm-dark-muted">
+          <div className="flex items-center gap-3">
+            <span>Showing {currentTransactions.length} of {filteredTransactions.length} transactions</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+              className="px-2 py-1.5 rounded-lg bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold focus:outline-none focus:ring-2 focus:ring-warm-sage"
+            >
+              <option value={10}>10 / page</option>
+              <option value={25}>25 / page</option>
+              <option value={50}>50 / page</option>
+              <option value={100}>100 / page</option>
+            </select>
+          </div>
+
           <div className="flex items-center space-x-2">
             <button
               disabled={currentPage === 1}
+              onClick={() => setCurrentPage(1)}
+              title="First page"
+              className="p-2 rounded-xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted disabled:opacity-50 hover:bg-warm-bg dark:hover:bg-warm-dark-surface transition-colors shadow-sm"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+            <button
+              disabled={currentPage === 1}
               onClick={() => setCurrentPage(currentPage - 1)}
+              title="Previous page"
               className="p-2 rounded-xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted disabled:opacity-50 hover:bg-warm-bg dark:hover:bg-warm-dark-surface transition-colors shadow-sm"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-bold text-warm-text dark:text-warm-dark-text px-2">Page {currentPage} of {totalPages}</span>
+
+            <span className="font-bold text-warm-text dark:text-warm-dark-text px-1">Page</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={totalPages}
+              value={pageInputValue}
+              onChange={(e) => setPageInputValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleJumpToPage(); }}
+              onBlur={handleJumpToPage}
+              className="w-14 px-1 py-1.5 text-center rounded-lg bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text font-bold focus:outline-none focus:ring-2 focus:ring-warm-sage"
+            />
+            <span className="font-bold text-warm-text dark:text-warm-dark-text px-1">of {totalPages}</span>
+
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(currentPage + 1)}
+              title="Next page"
               className="p-2 rounded-xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted disabled:opacity-50 hover:bg-warm-bg dark:hover:bg-warm-dark-surface transition-colors shadow-sm"
             >
               <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              title="Last page"
+              className="p-2 rounded-xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted disabled:opacity-50 hover:bg-warm-bg dark:hover:bg-warm-dark-surface transition-colors shadow-sm"
+            >
+              <ChevronsRight className="w-4 h-4" />
             </button>
           </div>
         </div>
