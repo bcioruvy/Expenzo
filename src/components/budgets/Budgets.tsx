@@ -14,7 +14,7 @@ import {
   Gauge 
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
-import { getBudgetSpentAmount } from '../../utils/chartData';
+import { getBudgetSpentAmount, getEffectiveBudgetTarget, getBudgetRolloverAmount } from '../../utils/chartData';
 import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Budgets: React.FC = () => {
@@ -42,6 +42,7 @@ export const Budgets: React.FC = () => {
   const [bCategory, setBCategory] = useState('Food & Dining');
   const [bTarget, setBTarget] = useState('');
   const [bAlertThreshold, setBAlertThreshold] = useState('85');
+  const [bRolloverEnabled, setBRolloverEnabled] = useState(false);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -50,6 +51,7 @@ export const Budgets: React.FC = () => {
     setBCategory('Food & Dining');
     setBTarget('');
     setBAlertThreshold('85');
+    setBRolloverEnabled(false);
     setShowModal(true);
   };
 
@@ -61,6 +63,7 @@ export const Budgets: React.FC = () => {
     setBCategory(b.category || 'Food & Dining');
     setBTarget(b.targetAmount.toString());
     setBAlertThreshold(b.alertThreshold.toString());
+    setBRolloverEnabled(b.rolloverEnabled || false);
     setShowModal(true);
   };
 
@@ -76,7 +79,8 @@ export const Budgets: React.FC = () => {
         targetAmount: parseFloat(bTarget),
         spentAmount: 0,
         period,
-        alertThreshold: parseFloat(bAlertThreshold) || 85
+        alertThreshold: parseFloat(bAlertThreshold) || 85,
+        rolloverEnabled: bRolloverEnabled,
       };
       await addBudget({
         name: bName,
@@ -85,7 +89,8 @@ export const Budgets: React.FC = () => {
         targetAmount: parseFloat(bTarget),
         spentAmount: getBudgetSpentAmount(draftBudget, transactions),
         period,
-        alertThreshold: parseFloat(bAlertThreshold) || 85
+        alertThreshold: parseFloat(bAlertThreshold) || 85,
+        rolloverEnabled: bRolloverEnabled,
       });
     } else if (editingBdg) {
       const draftBudget: Budget = {
@@ -94,6 +99,7 @@ export const Budgets: React.FC = () => {
         type: bType,
         category: bType === 'Category Budget' ? bCategory : undefined,
         targetAmount: parseFloat(bTarget),
+        rolloverEnabled: bRolloverEnabled,
       };
       await editBudget({
         ...draftBudget,
@@ -137,10 +143,12 @@ export const Budgets: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {budgets.map(bg => {
           const liveSpent = getBudgetSpentAmount(bg, transactions);
-          const usagePercent = Math.min(100, Math.round((liveSpent / bg.targetAmount) * 100));
-          const remaining = bg.targetAmount - liveSpent;
+          const rolloverAmount = getBudgetRolloverAmount(bg, transactions);
+          const effectiveTarget = getEffectiveBudgetTarget(bg, transactions);
+          const usagePercent = Math.min(100, Math.round((liveSpent / effectiveTarget) * 100));
+          const remaining = effectiveTarget - liveSpent;
           const isExceeded = usagePercent >= bg.alertThreshold;
-          const isFullyExceeded = liveSpent > bg.targetAmount;
+          const isFullyExceeded = liveSpent > effectiveTarget;
 
           // Budget Forecasting calculation: projects month-end spend based on
           // the actual current day of the month and days in the current month
@@ -148,7 +156,7 @@ export const Budgets: React.FC = () => {
           const dayOfMonth = today.getDate();
           const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
           const forecastTotal = Math.round((liveSpent / dayOfMonth) * daysInMonth);
-          const forecastStatus = forecastTotal > bg.targetAmount ? 'Over Target Forecast' : 'Optimal Forecast';
+          const forecastStatus = forecastTotal > effectiveTarget ? 'Over Target Forecast' : 'Optimal Forecast';
 
           return (
             <div 
@@ -179,12 +187,17 @@ export const Budgets: React.FC = () => {
 
                 <h3 className="font-bold text-warm-text dark:text-warm-dark-text text-lg tracking-tight mt-2">{bg.name}</h3>
                 {bg.category && <p className="text-xs text-warm-muted dark:text-warm-dark-muted">{bg.category}</p>}
+                {rolloverAmount > 0 && (
+                  <p className="text-[10px] font-bold text-warm-sage dark:text-warm-dark-sage mt-1">
+                    +{formatCurrency(rolloverAmount, settings.currency)} rolled over from last month
+                  </p>
+                )}
 
                 {/* Progress Bar & Amounts */}
                 <div className="mt-6 space-y-2">
                   <div className="flex items-baseline justify-between">
                     <span className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{formatCurrency(liveSpent, settings.currency)}</span>
-                    <span className="text-xs font-bold text-warm-muted dark:text-warm-dark-muted">of {formatCurrency(bg.targetAmount, settings.currency)} cap</span>
+                    <span className="text-xs font-bold text-warm-muted dark:text-warm-dark-muted">of {formatCurrency(effectiveTarget, settings.currency)} cap</span>
                   </div>
 
                   <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2.5 rounded-full overflow-hidden">
@@ -208,7 +221,7 @@ export const Budgets: React.FC = () => {
                     <Gauge className="w-4 h-4 text-warm-sage flex-shrink-0" />
                     <span>Forecast: ~{formatCurrency(forecastTotal, settings.currency)}</span>
                   </div>
-                  <span className={`font-bold ${forecastTotal > bg.targetAmount ? 'text-warm-dark-terracotta' : 'text-warm-dark-sage'}`}>
+                  <span className={`font-bold ${forecastTotal > effectiveTarget ? 'text-warm-dark-terracotta' : 'text-warm-dark-sage'}`}>
                     {forecastStatus}
                   </span>
                 </div>
@@ -299,6 +312,18 @@ export const Budgets: React.FC = () => {
                   />
                 </div>
               </div>
+
+              <label className="flex items-center gap-3 p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={bRolloverEnabled}
+                  onChange={(e) => setBRolloverEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded accent-warm-sage flex-shrink-0"
+                />
+                <span className="text-xs font-medium text-warm-text dark:text-warm-dark-text">
+                  Roll over unused budget into next month
+                </span>
+              </label>
 
               <p className="text-xs text-warm-muted dark:text-warm-dark-muted bg-warm-surface dark:bg-warm-dark-surface/50 rounded-xl px-3 py-2.5">
                 Spending progress is calculated automatically from your logged transactions — no need to enter it manually.
