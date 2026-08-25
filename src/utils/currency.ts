@@ -32,6 +32,37 @@ export const getCurrencySymbol = (currencyCode: string | undefined): string => {
  * matching how currency is typically displayed in Pakistan; other currencies
  * keep 2 decimal places.
  */
+/**
+ * Converts an amount from one currency into the user's base currency (settings.currency),
+ * using the manual exchange rates stored in settings.exchangeRates. Returns the amount
+ * unchanged if it's already in the base currency, or if no rate has been set for it yet
+ * (rather than silently mis-summing — callers that need to flag "rate missing" should
+ * check hasExchangeRate() separately).
+ *
+ * Rate convention: exchangeRates[code] = how many units of the base currency equal 1 unit
+ * of `code`. E.g. base currency PKR, exchangeRates.USD = 280 means 1 USD = Rs 280.
+ */
+export const convertToBaseCurrency = (
+  amount: number,
+  fromCurrency: string,
+  baseCurrency: string,
+  exchangeRates: Record<string, number> | undefined
+): number => {
+  if (fromCurrency === baseCurrency) return amount;
+  const rate = exchangeRates?.[fromCurrency];
+  if (!rate || rate <= 0) return amount; // no rate set — treat as 1:1 rather than drop it
+  return amount * rate;
+};
+
+/** Whether a manual exchange rate exists for converting `currency` into the base currency. */
+export const hasExchangeRate = (
+  currency: string,
+  baseCurrency: string,
+  exchangeRates: Record<string, number> | undefined
+): boolean => {
+  return currency === baseCurrency || !!(exchangeRates?.[currency] && exchangeRates[currency] > 0);
+};
+
 export const formatCurrency = (amount: number, currencyCode: string = DEFAULT_CURRENCY): string => {
   const symbol = getCurrencySymbol(currencyCode);
   const isZeroDecimal = currencyCode === 'PKR' || currencyCode === 'JPY';
