@@ -51,8 +51,6 @@ export const Transactions: React.FC = () => {
   };
   const activeIncomeCategories = buildCategoryOptions('Income', false);
   const activeExpenseCategories = buildCategoryOptions('Expense', false);
-  const allIncomeCategories = buildCategoryOptions('Income', true);
-  const allExpenseCategories = buildCategoryOptions('Expense', true);
   const iconForCategoryName = (name: string) => resolveCategoryIcon(categories.find(c => c.name === name)?.icon || 'HelpCircle');
 
   // Filters & Search state
@@ -60,6 +58,8 @@ export const Transactions: React.FC = () => {
   const [filterType, setFilterType] = useState('All');
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterAccount, setFilterAccount] = useState('All');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
   const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'amount_desc' | 'amount_asc'>('date_desc');
 
   // Pagination state
@@ -113,6 +113,13 @@ export const Transactions: React.FC = () => {
       result = result.filter(t => t.accountId === filterAccount);
     }
 
+    if (filterDateFrom) {
+      result = result.filter(t => t.date >= filterDateFrom);
+    }
+    if (filterDateTo) {
+      result = result.filter(t => t.date <= filterDateTo);
+    }
+
     result.sort((a, b) => {
       if (sortBy === 'date_desc') return new Date(b.date).getTime() - new Date(a.date).getTime();
       if (sortBy === 'date_asc') return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -122,7 +129,7 @@ export const Transactions: React.FC = () => {
     });
 
     return result;
-  }, [transactions, searchQuery, filterType, filterCategory, filterAccount, sortBy]);
+  }, [transactions, searchQuery, filterType, filterCategory, filterAccount, filterDateFrom, filterDateTo, sortBy]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage) || 1;
@@ -177,7 +184,9 @@ export const Transactions: React.FC = () => {
     setSelectedTxIds([]);
   };
 
-  // Export Transactions (CSV Simulation)
+  // Export Transactions (CSV Simulation) — exports exactly what's currently filtered
+  // (search, type, category, account, and date range), so "just this month" or "just
+  // this account" is as simple as setting those filters before exporting.
   const handleExportCSV = () => {
     const headers = ['Type', 'Category', 'Amount', 'Date', 'Account', 'Payment Method', 'Notes', 'Tags'];
     const rows = filteredTransactions.map(t => 
@@ -187,7 +196,28 @@ export const Transactions: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Transactions_Export_${new Date().toISOString().split('T')[0]}.csv`);
+
+    // Build a filename that reflects the active filters, so a downloaded file is
+    // self-describing (e.g. Transactions_MeezanBank_2026-02-01_to_2026-06-30.csv)
+    // instead of always the same generic name regardless of what was exported.
+    const filenameParts = ['Transactions'];
+    if (filterAccount !== 'All') {
+      const acc = accounts.find(a => a.id === filterAccount);
+      if (acc) filenameParts.push(acc.name.replace(/[^a-zA-Z0-9]+/g, ''));
+    }
+    if (filterCategory !== 'All') {
+      filenameParts.push(filterCategory.replace(/[^a-zA-Z0-9]+/g, ''));
+    }
+    if (filterType !== 'All') {
+      filenameParts.push(filterType);
+    }
+    if (filterDateFrom || filterDateTo) {
+      filenameParts.push(`${filterDateFrom || 'start'}_to_${filterDateTo || 'end'}`);
+    } else {
+      filenameParts.push(new Date().toISOString().split('T')[0]);
+    }
+    link.setAttribute("download", `${filenameParts.join('_')}.csv`);
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -330,7 +360,7 @@ export const Transactions: React.FC = () => {
       </div>
 
       {/* Filters & Sorting */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* Filter Type */}
         <div className="bg-white dark:bg-warm-dark-card p-4 rounded-2xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
@@ -356,10 +386,10 @@ export const Transactions: React.FC = () => {
           >
             <option value="All">All Categories</option>
             <optgroup label="Income Categories">
-              {allIncomeCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              {activeIncomeCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
             <optgroup label="Expense Categories">
-              {allExpenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              {activeExpenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
             </optgroup>
           </select>
         </div>
@@ -390,6 +420,38 @@ export const Transactions: React.FC = () => {
             <option value="amount_desc">Amount (Highest First)</option>
             <option value="amount_asc">Amount (Lowest First)</option>
           </select>
+        </div>
+
+        {/* Filter Date Range — also scopes the CSV export below to the same range */}
+        <div className="bg-white dark:bg-warm-dark-card p-4 rounded-2xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted">Date Range</label>
+            {(filterDateFrom || filterDateTo) && (
+              <button
+                onClick={() => { setFilterDateFrom(''); setFilterDateTo(''); setCurrentPage(1); }}
+                className="text-xs font-bold text-warm-terracotta dark:text-warm-dark-terracotta"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={filterDateFrom}
+              max={filterDateTo || undefined}
+              onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-transparent text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none"
+            />
+            <span className="text-warm-muted dark:text-warm-dark-muted text-xs flex-shrink-0">to</span>
+            <input
+              type="date"
+              value={filterDateTo}
+              min={filterDateFrom || undefined}
+              onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-transparent text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none"
+            />
+          </div>
         </div>
 
       </div>
