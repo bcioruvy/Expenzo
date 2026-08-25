@@ -101,6 +101,7 @@ export interface Budget {
   spentAmount: number;
   period: 'monthly' | 'weekly' | 'annual';
   alertThreshold: number; // percentage e.g., 85
+  rolloverEnabled?: boolean; // Monthly budgets only: unused allowance carries into next month
 }
 
 export interface Goal {
@@ -181,4 +182,9 @@ export interface UserSettings {
   dateFormat: string;
   enableNotifications: boolean;
   monthlyBudgetCap: number;
+  // Manual exchange rates for converting a non-base-currency account's balance into the
+  // user's base `currency` for combined totals (e.g. Dashboard's Total Balance). Keyed by
+  // currency code, value = how many units of the base currency equal 1 unit of that
+  // currency (e.g. { USD: 280 } when currency is 'PKR' means 1 USD = Rs 280).
+  exchangeRates?: Record<string, number>;
 }
