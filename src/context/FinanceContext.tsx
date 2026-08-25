@@ -16,8 +16,8 @@ import {
   isServingMockDataUnintentionally
 } from '../firebase/db';
 import { buildSeedCategories } from '../utils/categoryIcons';
-import { formatCurrency } from '../utils/currency';
-import { getBudgetSpentAmount } from '../utils/chartData';
+import { formatCurrency, convertToBaseCurrency } from '../utils/currency';
+import { getBudgetSpentAmount, getEffectiveBudgetTarget } from '../utils/chartData';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -181,7 +181,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [user, fetchData]);
 
   // Computed Calculations
-  const currentBalance = accounts.reduce((acc, a) => acc + a.balance, 0);
+  // Converts each account to the base currency (settings.currency) before summing, so a
+  // foreign-currency account (e.g. a USD account when the base is PKR) doesn't get added
+  // to the total as if 1 USD == 1 PKR. Uses the manual rate in settings.exchangeRates;
+  // falls back to 1:1 only if no rate has been set for that currency yet.
+  const currentBalance = accounts.reduce(
+    (acc, a) => acc + convertToBaseCurrency(a.balance, a.currency, settings.currency, settings.exchangeRates),
+    0
+  );
 
   // Internal transfers (money moved between the user's own accounts) are recorded as an
   // Expense + Income pair so each account's balance stays accurate, but they are not real
@@ -236,9 +243,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     .map(([cat]) => cat)
     .join(' + ');
 
+  // Includes rollover: a Monthly Budget with unused allowance from last month effectively
+  // has a higher cap this month, and the health score's "budget usage" should reflect that.
   const totalMonthlyBudget = budgets
     .filter(b => b.type === 'Monthly Budget')
-    .reduce((sum, b) => sum + b.targetAmount, 0) || settings.monthlyBudgetCap;
+    .reduce((sum, b) => sum + getEffectiveBudgetTarget(b, transactions), 0) || settings.monthlyBudgetCap;
 
   const budgetUsagePercent = Math.min(100, Math.round((monthlyExpenses / totalMonthlyBudget) * 100));
 
