@@ -105,6 +105,40 @@ export const getSpendingByCategory = (transactions: Transaction[], monthKey?: st
 // (for Category Budgets) within the budget's period (monthly/weekly/annual), anchored to
 // the reference date so it stays consistent with the rest of the app's "current month" logic.
 // Monthly Budgets with no specific category sum ALL expenses in the period.
+// Returns a Monthly Budget's unused allowance from the PREVIOUS month, which carries
+// forward as extra budget for the current month when the budget has rollover enabled.
+// Only meaningful for period === 'monthly' — weekly/annual budgets don't roll over here.
+// Only a POSITIVE leftover carries forward (money saved last month); overspending in a
+// prior month does not reduce this month's budget.
+export const getBudgetRolloverAmount = (budget: Budget, transactions: Transaction[], referenceDate?: Date): number => {
+  if (budget.period !== 'monthly' || !budget.rolloverEnabled) return 0;
+
+  const refDate = referenceDate || getReferenceDate(transactions);
+  const prevMonthAnchor = new Date(refDate.getFullYear(), refDate.getMonth() - 1, 1);
+  const prevPeriodStart = new Date(prevMonthAnchor.getFullYear(), prevMonthAnchor.getMonth(), 1);
+  const prevPeriodEnd = new Date(prevMonthAnchor.getFullYear(), prevMonthAnchor.getMonth() + 1, 0);
+
+  const prevSpent = transactions
+    .filter(t => {
+      if (t.type !== 'Expense') return false;
+      if (budget.category && t.category !== budget.category) return false;
+      if (!budget.category && isInternalTransfer(t)) return false;
+      const d = new Date(t.date + 'T00:00:00');
+      return d >= prevPeriodStart && d <= prevPeriodEnd;
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  return Math.max(0, budget.targetAmount - prevSpent);
+};
+
+// A budget's effective target for the CURRENT period = its base target amount plus any
+// rolled-over unused allowance from last month (0 if rollover isn't enabled/applicable).
+// Use this everywhere a budget's "cap" is shown or compared against spending, instead of
+// the raw targetAmount field, so rollover is reflected consistently across the app.
+export const getEffectiveBudgetTarget = (budget: Budget, transactions: Transaction[], referenceDate?: Date): number => {
+  return budget.targetAmount + getBudgetRolloverAmount(budget, transactions, referenceDate);
+};
+
 export const getBudgetSpentAmount = (budget: Budget, transactions: Transaction[], referenceDate?: Date): number => {
   const refDate = referenceDate || getReferenceDate(transactions);
 
