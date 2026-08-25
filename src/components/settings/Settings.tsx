@@ -33,10 +33,16 @@ export const Settings: React.FC = () => {
   const [currency, setCurrency] = useState(settings.currency || DEFAULT_CURRENCY);
   const [language, setLanguage] = useState(settings.language || 'English');
   const [dateFormat, setDateFormat] = useState(settings.dateFormat || 'yyyy-MM-dd');
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>(settings.exchangeRates || {});
+
+  // Currencies actually in use among the user's accounts, other than the selected base
+  // currency — these are the only ones that need a manual rate, so accounts that are all
+  // in one currency (the common case) never see this section at all.
+  const foreignCurrenciesInUse = Array.from(new Set(accounts.map(a => a.currency))).filter(c => c !== currency);
 
   const handleSavePreferences = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateSettings({ currency, language, dateFormat });
+    await updateSettings({ currency, language, dateFormat, exchangeRates });
     setSuccessMsg('System preferences successfully updated.');
     setTimeout(() => setSuccessMsg(''), 3500);
   };
@@ -203,6 +209,32 @@ export const Settings: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {foreignCurrenciesInUse.length > 0 && (
+                <div>
+                  <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Exchange Rates</label>
+                  <p className="text-xs text-warm-muted dark:text-warm-dark-muted mb-3">
+                    You have accounts in a currency other than your default ({currency}). Set the conversion rate so your Total Balance adds them together correctly instead of treating 1 unit of each currency as equal.
+                  </p>
+                  <div className="space-y-3">
+                    {foreignCurrenciesInUse.map(code => (
+                      <div key={code} className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-warm-text dark:text-warm-dark-text w-32 flex-shrink-0">1 {code} =</span>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          min="0"
+                          placeholder={`Rate in ${currency}`}
+                          value={exchangeRates[code] ?? ''}
+                          onChange={(e) => setExchangeRates(prev => ({ ...prev, [code]: parseFloat(e.target.value) || 0 }))}
+                          className="flex-1 px-4 py-2.5 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-2xl text-warm-text dark:text-warm-dark-text font-medium text-sm focus:outline-none focus:ring-2 focus:ring-warm-sage"
+                        />
+                        <span className="text-sm font-bold text-warm-muted dark:text-warm-dark-muted flex-shrink-0">{currency}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Interface Language</label>
