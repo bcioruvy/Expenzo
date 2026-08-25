@@ -11,7 +11,7 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
-import { getBudgetSpentAmount, getReferenceDate } from '../../utils/chartData';
+import { getBudgetSpentAmount, getEffectiveBudgetTarget, getReferenceDate } from '../../utils/chartData';
 
 export const Reports: React.FC = () => {
   const { transactions, budgets, goals, monthlyIncome, monthlyExpenses, savingsThisMonth, settings } = useFinance();
@@ -51,7 +51,8 @@ export const Reports: React.FC = () => {
       headers = ['Budget Name', 'Type', 'Target Amount', 'Spent Amount', 'Status'];
       rows = budgets.map(b => {
         const spent = getBudgetSpentAmount(b, transactions, referenceDate);
-        return `"${b.name}","${b.type}",${b.targetAmount},${spent},"${spent > b.targetAmount ? 'Over Budget' : 'On Track'}"`;
+        const effectiveTarget = getEffectiveBudgetTarget(b, transactions, referenceDate);
+        return `"${b.name}","${b.type}",${effectiveTarget},${spent},"${spent > effectiveTarget ? 'Over Budget' : 'On Track'}"`;
       });
     } else if (selectedReport === 'savings') {
       headers = ['Goal Name', 'Category', 'Target Amount', 'Current Saved', 'Deadline'];
@@ -300,15 +301,16 @@ export const Reports: React.FC = () => {
               <tbody className="divide-y divide-warm-surface dark:divide-warm-dark-surface/50 text-sm font-medium text-warm-text dark:text-warm-dark-muted">
                 {budgets.map(bg => {
                   const liveSpent = getBudgetSpentAmount(bg, transactions, referenceDate);
+                  const effectiveTarget = getEffectiveBudgetTarget(bg, transactions, referenceDate);
                   return (
                   <tr key={bg.id} className="hover:bg-warm-bg dark:hover:bg-warm-dark-surface/30 transition-colors">
                     <td className="py-4 px-6 font-bold text-warm-text dark:text-warm-dark-text">{bg.name}</td>
                     <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{bg.type}</td>
-                    <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(bg.targetAmount, settings.currency)}</td>
+                    <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(effectiveTarget, settings.currency)}</td>
                     <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(liveSpent, settings.currency)}</td>
                     <td className="py-4 px-6 text-right">
-                      <span className={`px-2.5 py-1 rounded-xl text-xs font-bold inline-block ${liveSpent > bg.targetAmount ? 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta' : 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage'}`}>
-                        {liveSpent > bg.targetAmount ? 'Exceeded' : 'Optimal'}
+                      <span className={`px-2.5 py-1 rounded-xl text-xs font-bold inline-block ${liveSpent > effectiveTarget ? 'bg-warm-terracotta/10 text-warm-terracotta dark:text-warm-dark-terracotta' : 'bg-warm-sage/10 text-warm-sage dark:text-warm-dark-sage'}`}>
+                        {liveSpent > effectiveTarget ? 'Exceeded' : 'Optimal'}
                       </span>
                     </td>
                   </tr>
