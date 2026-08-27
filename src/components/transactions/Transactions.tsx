@@ -27,6 +27,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Transactions: React.FC = () => {
@@ -435,21 +436,20 @@ export const Transactions: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="space-y-2">
             <input
               type="date"
               value={filterDateFrom}
               max={filterDateTo || undefined}
               onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-transparent text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none"
+              className="w-full min-w-0 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none focus:ring-2 focus:ring-warm-sage"
             />
-            <span className="text-warm-muted dark:text-warm-dark-muted text-xs flex-shrink-0">to</span>
             <input
               type="date"
               value={filterDateTo}
               min={filterDateFrom || undefined}
               onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-transparent text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none"
+              className="w-full min-w-0 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none focus:ring-2 focus:ring-warm-sage"
             />
           </div>
         </div>
@@ -567,7 +567,7 @@ export const Transactions: React.FC = () => {
                       <td className="py-4 px-4 text-xs text-warm-muted dark:text-warm-dark-muted font-medium">
                         <div className="flex items-center space-x-1.5">
                           <Calendar className="w-4 h-4 text-warm-dark-muted" />
-                          <span>{tx.date}</span>
+                          <span>{formatDate(tx.date, settings.dateFormat)}</span>
                         </div>
                       </td>
                       <td className={`py-4 px-4 text-right font-extrabold tracking-tight ${tx.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
