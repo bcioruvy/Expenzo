@@ -13,6 +13,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { EmptyState } from '../shared/EmptyState';
 
 export const Goals: React.FC = () => {
@@ -176,7 +177,7 @@ export const Goals: React.FC = () => {
                       <Calendar className="w-4 h-4 text-warm-sage" />
                       <span>Target Deadline:</span>
                     </div>
-                    <span className="font-bold text-warm-text dark:text-warm-dark-text">{gl.deadline}</span>
+                    <span className="font-bold text-warm-text dark:text-warm-dark-text">{formatDate(gl.deadline, settings.dateFormat)}</span>
                   </div>
                   
                   <div className="flex items-center justify-between text-warm-muted dark:text-warm-dark-muted border-t border-warm-surface dark:border-warm-dark-surface/50 pt-2">
