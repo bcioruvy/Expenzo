@@ -5,6 +5,7 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { Repeat, Plus, Pause, Play, Trash2, Edit3, Calendar } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 const FREQUENCY_LABELS: Record<RecurringRule['frequency'], string> = {
@@ -172,7 +173,7 @@ export const RecurringTransactions: React.FC = () => {
                     {rule.category}{rule.notes ? ` · ${rule.notes}` : ''}
                   </p>
                   <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
-                    {FREQUENCY_LABELS[rule.frequency]} · Next: {rule.nextDueDate} · {rule.accountName}
+                    {FREQUENCY_LABELS[rule.frequency]} · Next: {formatDate(rule.nextDueDate, settings.dateFormat)} · {rule.accountName}
                   </p>
                 </div>
               </div>
