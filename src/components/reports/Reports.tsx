@@ -11,6 +11,7 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { getBudgetSpentAmount, getEffectiveBudgetTarget, getReferenceDate } from '../../utils/chartData';
 
 export const Reports: React.FC = () => {
@@ -214,7 +215,7 @@ export const Reports: React.FC = () => {
                           {tx.type}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{tx.date}</td>
+                      <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{formatDate(tx.date, settings.dateFormat)}</td>
                       <td className={`py-4 px-6 text-right font-extrabold ${tx.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
                         {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount, settings.currency)}
                       </td>
@@ -247,7 +248,7 @@ export const Reports: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 text-xs font-semibold text-warm-muted dark:text-warm-dark-muted">{tx.accountName}</td>
                     <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{tx.paymentMethod}</td>
-                    <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{tx.date}</td>
+                    <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{formatDate(tx.date, settings.dateFormat)}</td>
                     <td className="py-4 px-6 text-right font-extrabold text-warm-sage dark:text-warm-dark-sage">+{formatCurrency(tx.amount, settings.currency)}</td>
                   </tr>
                 ))}
@@ -277,7 +278,7 @@ export const Reports: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 text-xs font-semibold text-warm-muted dark:text-warm-dark-muted">{tx.accountName}</td>
                     <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{tx.paymentMethod}</td>
-                    <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{tx.date}</td>
+                    <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{formatDate(tx.date, settings.dateFormat)}</td>
                     <td className="py-4 px-6 text-right font-extrabold text-warm-terracotta dark:text-warm-dark-terracotta">-{formatCurrency(tx.amount, settings.currency)}</td>
                   </tr>
                 ))}
@@ -340,7 +341,7 @@ export const Reports: React.FC = () => {
                     <td className="py-4 px-6 text-xs text-warm-muted dark:text-warm-dark-muted">{gl.category}</td>
                     <td className="py-4 px-6 text-right font-semibold text-warm-text dark:text-warm-dark-text">{formatCurrency(gl.targetAmount, settings.currency)}</td>
                     <td className="py-4 px-6 text-right font-extrabold text-warm-sage dark:text-warm-dark-sage">{formatCurrency(gl.currentAmount, settings.currency)}</td>
-                    <td className="py-4 px-6 text-right text-xs font-medium text-warm-muted dark:text-warm-dark-muted">{gl.deadline}</td>
+                    <td className="py-4 px-6 text-right text-xs font-medium text-warm-muted dark:text-warm-dark-muted">{formatDate(gl.deadline, settings.dateFormat)}</td>
                   </tr>
                 ))}
               </tbody>
