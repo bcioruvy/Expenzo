@@ -3,6 +3,8 @@ import { Modal } from '../shared/Modal';
 import { Account, Transaction } from '../../types';
 import { parseImportBlock, ParsedImportRow } from '../../utils/importParser';
 import { formatCurrency } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
+import { useFinance } from '../../context/FinanceContext';
 import { Upload, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ImportTransactionsModalProps {
@@ -28,6 +30,7 @@ const DEFAULT_CATEGORY_MAP: Record<SheetTab, string> = {
 export const ImportTransactionsModal: React.FC<ImportTransactionsModalProps> = ({
   accounts, expenseCategories, onClose, onImport
 }) => {
+  const { settings } = useFinance();
   const [activeTab, setActiveTab] = useState<SheetTab>('Groceries');
   const [textByTab, setTextByTab] = useState<Record<SheetTab, string>>({
     'Groceries': '', 'Bills': '', 'Fast Food': '', 'Other': '',
@@ -190,7 +193,7 @@ export const ImportTransactionsModal: React.FC<ImportTransactionsModalProps> = (
               {current.rows.slice(0, 3).map((row, i) => (
                 <div key={i} className="flex items-center justify-between text-xs text-warm-text dark:text-warm-dark-text">
                   <span className="truncate flex-1">{row.name}</span>
-                  <span className="text-warm-muted dark:text-warm-dark-muted mx-2">{row.date}</span>
+                  <span className="text-warm-muted dark:text-warm-dark-muted mx-2">{formatDate(row.date, settings.dateFormat)}</span>
                   <span className="font-bold">{formatCurrency(row.amount, selectedAccount?.currency || 'PKR')}</span>
                 </div>
               ))}
