@@ -19,6 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { getMonthlyIncomeExpense, getWeeklyCashFlow } from '../../utils/chartData';
 import { EmptyState } from '../shared/EmptyState';
 import { BalanceBeamWidget } from './BalanceBeamWidget';
@@ -577,7 +578,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
                   <p className={`text-sm font-extrabold tracking-tight ${tx.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
                     {tx.type === 'Income' ? '+' : '-'}{formatCurrency(tx.amount, settings.currency)}
                   </p>
-                  <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium">{tx.date}</p>
+                  <p className="text-[10px] text-warm-muted dark:text-warm-dark-muted font-medium">{formatDate(tx.date, settings.dateFormat)}</p>
                 </div>
               </div>
               ))
