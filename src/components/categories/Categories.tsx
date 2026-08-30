@@ -360,7 +360,7 @@ export const Categories: React.FC = () => {
           <EmptyState
             icon={Tags}
             title="No transactions yet"
-            description={`Transactions filed under "${detailCategory.name}" will show up here.`}
+            message={`Transactions filed under "${detailCategory.name}" will show up here.`}
           />
         ) : (
           <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm divide-y divide-warm-surface dark:divide-warm-dark-surface/60">
