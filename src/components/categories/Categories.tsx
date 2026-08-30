@@ -5,7 +5,8 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { resolveCategoryIcon, AVAILABLE_ICON_NAMES } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/currency';
-import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check } from 'lucide-react';
+import { formatDate } from '../../utils/dateFormat';
+import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check, ArrowLeft, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export const Categories: React.FC = () => {
   const { categories, transactions, settings, addCategory, editCategory, archiveCategory, restoreCategory } = useFinance();
@@ -30,10 +31,15 @@ export const Categories: React.FC = () => {
   const isInternalTransfer = (t: typeof transactions[number]) =>
     t.category === 'Transfer' && (t.tags || []).includes('internal');
 
+  // Keyed by "type::name" rather than just name — an Income category and an Expense
+  // category can validly share the same name (e.g. a family member's name used on both
+  // sides, for money sent to them and money received from them), and without the type in
+  // the key their totals would silently merge into one number shown on both cards.
   const totalsByCategory = useMemo(() => {
     const totals: Record<string, number> = {};
     transactions.filter(t => !isInternalTransfer(t)).forEach(t => {
-      totals[t.category] = (totals[t.category] || 0) + t.amount;
+      const key = `${t.type}::${t.category}`;
+      totals[key] = (totals[key] || 0) + t.amount;
     });
     return totals;
   }, [transactions]);
@@ -130,6 +136,7 @@ export const Categories: React.FC = () => {
   const [draggedCat, setDraggedCat] = useState<Category | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<'above' | 'below'>('below');
+  const [detailCategory, setDetailCategory] = useState<Category | null>(null);
 
   const handleDragPointerDown = (e: React.PointerEvent, cat: Category) => {
     if (cat.isArchived) return;
@@ -212,9 +219,9 @@ export const Categories: React.FC = () => {
     // its subcategories — a transaction's `category` field is set to whichever specific
     // category (parent or sub) was picked, never both, so without this the parent row
     // would only ever show spend from transactions filed directly against it.
-    const ownTotal = totalsByCategory[cat.name] || 0;
+    const ownTotal = totalsByCategory[`${cat.type}::${cat.name}`] || 0;
     const total = hasSubCats
-      ? ownTotal + subCats.reduce((sum, sub) => sum + (totalsByCategory[sub.name] || 0), 0)
+      ? ownTotal + subCats.reduce((sum, sub) => sum + (totalsByCategory[`${sub.type}::${sub.name}`] || 0), 0)
       : ownTotal;
 
     const isDragged = draggedCat?.id === cat.id;
@@ -243,20 +250,26 @@ export const Categories: React.FC = () => {
               </button>
             )}
             {!isSub && !hasSubCats && <div className="w-4 flex-shrink-0" />}
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-              activeType === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
-            }`}>
-              <Icon className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-sm text-warm-text dark:text-warm-dark-text truncate flex items-center gap-2">
-                {cat.name}
-                {cat.isArchived && <span className="text-[10px] uppercase font-bold tracking-wide text-warm-muted dark:text-warm-dark-muted bg-warm-surface dark:bg-warm-dark-surface px-1.5 py-0.5 rounded">Archived</span>}
-              </p>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
-                {formatCurrency(total, settings.currency)} total {activeType === 'Income' ? 'earned' : 'spent'}
-              </p>
-            </div>
+            <button
+              onClick={() => setDetailCategory(cat)}
+              title="View transactions in this category"
+              className="flex items-center space-x-3 min-w-0 flex-1 text-left"
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                activeType === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
+              }`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-sm text-warm-text dark:text-warm-dark-text truncate flex items-center gap-2">
+                  {cat.name}
+                  {cat.isArchived && <span className="text-[10px] uppercase font-bold tracking-wide text-warm-muted dark:text-warm-dark-muted bg-warm-surface dark:bg-warm-dark-surface px-1.5 py-0.5 rounded">Archived</span>}
+                </p>
+                <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
+                  {formatCurrency(total, settings.currency)} total {activeType === 'Income' ? 'earned' : 'spent'}
+                </p>
+              </div>
+            </button>
           </div>
           <div className="flex items-center space-x-1.5 flex-shrink-0 ml-3">
             {!isSub && !cat.isArchived && (
@@ -295,6 +308,88 @@ export const Categories: React.FC = () => {
       </div>
     );
   };
+
+  // Drill-down view for a single category, opened by tapping its name/icon in the list.
+  // Shows every transaction filed under it — and, if it's a parent, everything filed
+  // under its subcategories too, matching the same rollup used for the card's total —
+  // with a running total, replacing the category list in place (no new tab/page, just a
+  // swapped view within this same screen, with a Back button to return).
+  if (detailCategory) {
+    const subCats = detailCategory.parentId ? [] : getSubCategories(detailCategory.id);
+    const relevantNames = new Set([detailCategory.name, ...subCats.map(s => s.name)]);
+    const detailTransactions = transactions
+      .filter(t => t.type === detailCategory.type && relevantNames.has(t.category))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const detailTotal = detailTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const DetailIcon = resolveCategoryIcon(detailCategory.icon);
+
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => setDetailCategory(null)}
+          className="flex items-center gap-2 text-sm font-bold text-warm-muted dark:text-warm-dark-muted hover:text-warm-text dark:hover:text-warm-dark-text transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Categories
+        </button>
+
+        <div className="bg-white dark:bg-warm-dark-card p-5 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+              detailCategory.type === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
+            }`}>
+              <DetailIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text">{detailCategory.name}</h2>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
+                {detailTransactions.length} transaction{detailTransactions.length === 1 ? '' : 's'}
+                {subCats.length > 0 && ` · includes ${subCats.length} sub-categor${subCats.length === 1 ? 'y' : 'ies'}`}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className={`text-2xl font-extrabold tracking-tight ${detailCategory.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
+              {formatCurrency(detailTotal, settings.currency)}
+            </p>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted">total {detailCategory.type === 'Income' ? 'earned' : 'spent'}</p>
+          </div>
+        </div>
+
+        {detailTransactions.length === 0 ? (
+          <EmptyState
+            icon={Tags}
+            title="No transactions yet"
+            description={`Transactions filed under "${detailCategory.name}" will show up here.`}
+          />
+        ) : (
+          <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm divide-y divide-warm-surface dark:divide-warm-dark-surface/60">
+            {detailTransactions.map(t => (
+              <div key={t.id} className="p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    t.type === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
+                  }`}>
+                    {t.type === 'Income' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-warm-text dark:text-warm-dark-text truncate">{t.notes || t.category}</p>
+                    <p className="text-xs text-warm-muted dark:text-warm-dark-muted truncate">
+                      {formatDate(t.date, settings.dateFormat)} · {t.accountName}
+                      {subCats.length > 0 && t.category !== detailCategory.name && ` · ${t.category}`}
+                    </p>
+                  </div>
+                </div>
+                <span className={`font-bold text-sm flex-shrink-0 ${t.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
+                  {t.type === 'Income' ? '+' : '-'}{formatCurrency(t.amount, settings.currency)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
