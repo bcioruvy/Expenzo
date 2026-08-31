@@ -1,10 +1,18 @@
 import { Transaction, Budget } from '../types';
 
-// Internal transfers (money moved between the user's own accounts) are recorded as an
-// Expense + Income pair so each account's balance stays accurate, but they aren't real
-// earned income or real spending. Every chart that sums "money in/out" must exclude them,
-// or moving money between accounts inflates income/expense trends and cash flow charts.
-const isInternalTransfer = (t: Transaction) => t.category === 'Transfer' && (t.tags || []).includes('internal');
+// Two kinds of transaction are real money movements but NOT real income/spending, and must
+// be excluded everywhere "money in/out" gets summed (income/expense totals, budget usage,
+// the health score, category totals, cash flow charts) — otherwise they inflate those
+// numbers even though nothing was actually earned or spent:
+//   1. Internal transfers — money moved between the user's own accounts (Expense + Income
+//      pair so each account's balance stays accurate).
+//   2. Opening balances — the starting amount recorded when an account is created, logged
+//      as a real transaction (so account balances are fully backed by transaction history,
+//      e.g. for the Accounts page's "Recalculate Balance" feature) but not money earned
+//      during whatever month the account happened to be created in.
+export const isExcludedFromStats = (t: Transaction) =>
+  (t.category === 'Transfer' && (t.tags || []).includes('internal')) ||
+  (t.category === 'Opening Balance' && (t.tags || []).includes('opening-balance'));
 
 
 // Returns the "current month" (YYYY-MM) to treat as "today" for chart windows and
@@ -39,12 +47,12 @@ export const getMonthlyIncomeExpense = (transactions: Transaction[], n: number =
   const months = getLastNMonths(n, refDate);
   const income = months.map(({ key }) =>
     transactions
-      .filter(t => t.type === 'Income' && t.date.startsWith(key) && !isInternalTransfer(t))
+      .filter(t => t.type === 'Income' && t.date.startsWith(key) && !isExcludedFromStats(t))
       .reduce((sum, t) => sum + t.amount, 0)
   );
   const expenses = months.map(({ key }) =>
     transactions
-      .filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isInternalTransfer(t))
+      .filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isExcludedFromStats(t))
       .reduce((sum, t) => sum + t.amount, 0)
   );
   return { labels: months.map(m => m.label), income, expenses };
@@ -77,8 +85,8 @@ export const getWeeklyCashFlow = (transactions: Transaction[], n: number = 4, re
       const d = new Date(t.date);
       return d >= start && d <= end;
     });
-    const income = inRange.filter(t => t.type === 'Income' && !isInternalTransfer(t)).reduce((sum, t) => sum + t.amount, 0);
-    const expense = inRange.filter(t => t.type === 'Expense' && !isInternalTransfer(t)).reduce((sum, t) => sum + t.amount, 0);
+    const income = inRange.filter(t => t.type === 'Income' && !isExcludedFromStats(t)).reduce((sum, t) => sum + t.amount, 0);
+    const expense = inRange.filter(t => t.type === 'Expense' && !isExcludedFromStats(t)).reduce((sum, t) => sum + t.amount, 0);
     return income - expense;
   });
   return { labels: weeks.map(w => w.label), netFlow };
@@ -88,7 +96,7 @@ export const getWeeklyCashFlow = (transactions: Transaction[], n: number = 4, re
 // (defaults to the reference month derived from transaction history, not the device clock).
 export const getSpendingByCategory = (transactions: Transaction[], monthKey?: string) => {
   const key = monthKey || getReferenceDate(transactions).toISOString().slice(0, 7);
-  const expenses = transactions.filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isInternalTransfer(t));
+  const expenses = transactions.filter(t => t.type === 'Expense' && t.date.startsWith(key) && !isExcludedFromStats(t));
   const totals: Record<string, number> = {};
   expenses.forEach(t => {
     totals[t.category] = (totals[t.category] || 0) + t.amount;
@@ -122,7 +130,7 @@ export const getBudgetRolloverAmount = (budget: Budget, transactions: Transactio
     .filter(t => {
       if (t.type !== 'Expense') return false;
       if (budget.category && t.category !== budget.category) return false;
-      if (!budget.category && isInternalTransfer(t)) return false;
+      if (!budget.category && isExcludedFromStats(t)) return false;
       const d = new Date(t.date + 'T00:00:00');
       return d >= prevPeriodStart && d <= prevPeriodEnd;
     })
@@ -163,7 +171,7 @@ export const getBudgetSpentAmount = (budget: Budget, transactions: Transaction[]
     .filter(t => {
       if (t.type !== 'Expense') return false;
       if (budget.category && t.category !== budget.category) return false;
-      if (!budget.category && isInternalTransfer(t)) return false; // Monthly Budgets sum all real spending, not internal transfers
+      if (!budget.category && isExcludedFromStats(t)) return false; // Monthly Budgets sum all real spending, not internal transfers
       const d = new Date(t.date + 'T00:00:00');
       return d >= periodStart && d <= periodEnd;
     })
