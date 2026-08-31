@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 import { formatDate } from '../../utils/dateFormat';
+import { downloadCSV } from '../../utils/fileDownload';
 import { resolveCategoryIcon } from '../../utils/categoryIcons';
 
 export const Transactions: React.FC = () => {
@@ -188,15 +189,16 @@ export const Transactions: React.FC = () => {
   // Export Transactions (CSV Simulation) — exports exactly what's currently filtered
   // (search, type, category, account, and date range), so "just this month" or "just
   // this account" is as simple as setting those filters before exporting.
-  const handleExportCSV = () => {
+  // Export Transactions — exports exactly what's currently filtered (search, type,
+  // category, account, and date range). Uses downloadCSV() rather than the old data: URI
+  // technique, which was unreliable on iOS Safari and could silently do nothing when
+  // tapped — see fileDownload.ts for why.
+  const handleExportCSV = async () => {
     const headers = ['Type', 'Category', 'Amount', 'Date', 'Account', 'Payment Method', 'Notes', 'Tags'];
     const rows = filteredTransactions.map(t => 
       `"${t.type}","${t.category}",${t.amount},"${t.date}","${t.accountName}","${t.paymentMethod}","${t.notes.replace(/"/g, '""')}","${t.tags.join(', ')}"`
     );
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    const csvBody = [headers.join(','), ...rows].join("\n");
 
     // Build a filename that reflects the active filters, so a downloaded file is
     // self-describing (e.g. Transactions_MeezanBank_2026-02-01_to_2026-06-30.csv)
@@ -217,11 +219,8 @@ export const Transactions: React.FC = () => {
     } else {
       filenameParts.push(new Date().toISOString().split('T')[0]);
     }
-    link.setAttribute("download", `${filenameParts.join('_')}.csv`);
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    await downloadCSV(csvBody, `${filenameParts.join('_')}.csv`);
   };
 
   // Open Add Modal
