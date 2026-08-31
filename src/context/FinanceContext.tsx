@@ -17,7 +17,7 @@ import {
 } from '../firebase/db';
 import { buildSeedCategories } from '../utils/categoryIcons';
 import { formatCurrency, convertToBaseCurrency } from '../utils/currency';
-import { getBudgetSpentAmount, getEffectiveBudgetTarget } from '../utils/chartData';
+import { getBudgetSpentAmount, getEffectiveBudgetTarget, isExcludedFromStats } from '../utils/chartData';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -52,7 +52,7 @@ interface FinanceContextType {
   removeTransaction: (id: string) => Promise<void>;
   removeMultipleTransactions: (ids: string[]) => Promise<void>;
   importTransactions: (txs: Array<Omit<Transaction, 'id' | 'userId'>>) => Promise<number>;
-  addAccount: (acc: Omit<Account, 'id' | 'userId'>) => Promise<void>;
+  addAccount: (acc: Omit<Account, 'id' | 'userId'>) => Promise<Account | void>;
   editAccount: (acc: Account) => Promise<void>;
   removeAccount: (id: string) => Promise<void>;
   transferFunds: (fromAccId: string, toAccId: string, amount: number, notes?: string, date?: string) => Promise<void>;
@@ -190,12 +190,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     0
   );
 
-  // Internal transfers (money moved between the user's own accounts) are recorded as an
-  // Expense + Income pair so each account's balance stays accurate, but they are not real
-  // earned income or real spending — they must be excluded from every "money in/out" stat
-  // (monthly income/expenses, savings, budget usage, health score, charts) or those numbers
-  // get inflated every time the user moves money between accounts.
-  const isInternalTransfer = (t: Transaction) => t.category === 'Transfer' && (t.tags || []).includes('internal');
 
   // Filter for current month (using 2026-06 as today's date base)
   // "Current month" is derived from the most recent transaction date rather than
@@ -207,11 +201,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, null);
   const currentMonthPrefix = (mostRecentTxDate || new Date().toISOString()).slice(0, 7);
   const monthlyIncome = transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
+    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isExcludedFromStats(t))
     .reduce((sum, t) => sum + t.amount, 0);
 
   const monthlyExpenses = transactions
-    .filter(t => t.type === 'Expense' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
+    .filter(t => t.type === 'Expense' && t.date.startsWith(currentMonthPrefix) && !isExcludedFromStats(t))
     .reduce((sum, t) => sum + t.amount, 0);
 
   const savingsThisMonth = monthlyIncome - monthlyExpenses;
@@ -222,10 +216,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   prevMonthDate.setMonth(prevMonthDate.getMonth() - 1);
   const prevMonthPrefix = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const prevMonthIncome = transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(prevMonthPrefix) && !isInternalTransfer(t))
+    .filter(t => t.type === 'Income' && t.date.startsWith(prevMonthPrefix) && !isExcludedFromStats(t))
     .reduce((sum, t) => sum + t.amount, 0);
   const prevMonthExpenses = transactions
-    .filter(t => t.type === 'Expense' && t.date.startsWith(prevMonthPrefix) && !isInternalTransfer(t))
+    .filter(t => t.type === 'Expense' && t.date.startsWith(prevMonthPrefix) && !isExcludedFromStats(t))
     .reduce((sum, t) => sum + t.amount, 0);
   const prevMonthNet = prevMonthIncome - prevMonthExpenses;
   const balanceChangePercent = prevMonthNet !== 0
@@ -235,7 +229,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Top income category label for this month, e.g. "Salary" or "Salary + Freelance"
   const incomeByCategory: Record<string, number> = {};
   transactions
-    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isInternalTransfer(t))
+    .filter(t => t.type === 'Income' && t.date.startsWith(currentMonthPrefix) && !isExcludedFromStats(t))
     .forEach(t => { incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount; });
   const topIncomeSources = Object.entries(incomeByCategory)
     .sort((a, b) => b[1] - a[1])
@@ -486,6 +480,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) return;
     const newAcc = await dbSaveAccount({ ...acc, userId: user.uid } as Account);
     setAccounts(prev => [...prev, newAcc]);
+    return newAcc;
   };
 
   const editAccount = async (acc: Account) => {
