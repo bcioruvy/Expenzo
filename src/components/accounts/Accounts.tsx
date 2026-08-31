@@ -22,7 +22,7 @@ import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY, CURRENCY_OPTIONS }
 import { EmptyState } from '../shared/EmptyState';
 
 export const Accounts: React.FC = () => {
-  const { accounts, transactions, addAccount, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
+  const { accounts, transactions, addAccount, addTransaction, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
 
   // Modal state for Add/Edit Account
   const [showAccModal, setShowAccModal] = useState(false);
@@ -106,14 +106,35 @@ export const Accounts: React.FC = () => {
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (modalMode === 'add') {
-      await addAccount({
+      const openingBalance = parseFloat(accBalance) || 0;
+
+      // The account itself always starts at 0 — if there's an opening balance, it's
+      // logged as a real transaction below instead of a bare number on the account, so
+      // the balance is fully backed by transaction history (e.g. so "Recalculate Balance"
+      // on the Accounts page never wipes it out) and shows up as a visible, editable line
+      // in Transactions/exports rather than an invisible starting figure.
+      const newAcc = await addAccount({
         name: accName,
         type: accType,
-        balance: parseFloat(accBalance),
+        balance: 0,
         currency: accCurrency,
         color: accColor,
         isDefault: accounts.length === 0
       });
+
+      if (newAcc && openingBalance !== 0) {
+        await addTransaction({
+          type: openingBalance > 0 ? 'Income' : 'Expense',
+          amount: Math.abs(openingBalance),
+          category: 'Opening Balance',
+          date: new Date().toISOString().split('T')[0],
+          notes: `Opening balance for ${accName}`,
+          tags: ['opening-balance'],
+          paymentMethod: 'Other',
+          accountId: newAcc.id,
+          accountName: newAcc.name,
+        });
+      }
     } else if (editingAcc) {
       await editAccount({
         ...editingAcc,
