@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/dateFormat';
-import { getBudgetSpentAmount, getEffectiveBudgetTarget, getReferenceDate } from '../../utils/chartData';
+import { getBudgetSpentAmount, getEffectiveBudgetTarget, getReferenceDate, isExcludedFromStats } from '../../utils/chartData';
 import { downloadCSV } from '../../utils/fileDownload';
 
 export const Reports: React.FC = () => {
@@ -28,9 +28,8 @@ export const Reports: React.FC = () => {
     () => transactions.filter(t => t.date.startsWith(reportMonth)),
     [transactions, reportMonth]
   );
-  const isInternalTransfer = (t: typeof monthTransactions[number]) => t.category === 'Transfer' && (t.tags || []).includes('internal');
-  const monthIncomeTotal = monthTransactions.filter(t => t.type === 'Income' && !isInternalTransfer(t)).reduce((s, t) => s + t.amount, 0);
-  const monthExpenseTotal = monthTransactions.filter(t => t.type === 'Expense' && !isInternalTransfer(t)).reduce((s, t) => s + t.amount, 0);
+  const monthIncomeTotal = monthTransactions.filter(t => t.type === 'Income' && !isExcludedFromStats(t)).reduce((s, t) => s + t.amount, 0);
+  const monthExpenseTotal = monthTransactions.filter(t => t.type === 'Expense' && !isExcludedFromStats(t)).reduce((s, t) => s + t.amount, 0);
   const monthSavings = monthIncomeTotal - monthExpenseTotal;
   const referenceDate = React.useMemo(() => new Date(reportMonth + '-15T00:00:00'), [reportMonth]);
 
