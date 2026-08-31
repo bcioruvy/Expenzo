@@ -5,6 +5,7 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { resolveCategoryIcon, AVAILABLE_ICON_NAMES } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/currency';
+import { isExcludedFromStats } from '../../utils/chartData';
 import { formatDate } from '../../utils/dateFormat';
 import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check, ArrowLeft, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
@@ -25,11 +26,9 @@ export const Categories: React.FC = () => {
   // All-time spent/earned total per category name, computed directly from transactions —
   // this is intentionally all-time (not month-scoped) since the Categories page is about
   // understanding a category overall, not a specific month's activity. Internal transfers
-  // (money moved between the user's own accounts, e.g. a bank-to-cash withdrawal) are
-  // excluded — same rule used everywhere else totals are computed (Dashboard, Reports,
-  // Analytics) — so a "Transfer" category, if one exists, never shows inflated totals.
-  const isInternalTransfer = (t: typeof transactions[number]) =>
-    t.category === 'Transfer' && (t.tags || []).includes('internal');
+  // and opening-balance entries are excluded — same rule used everywhere else totals are
+  // computed (Dashboard, Reports, Analytics) — so neither a "Transfer" nor an
+  // "Opening Balance" category, if either exists, ever shows inflated totals.
 
   // Keyed by "type::name" rather than just name — an Income category and an Expense
   // category can validly share the same name (e.g. a family member's name used on both
@@ -37,7 +36,7 @@ export const Categories: React.FC = () => {
   // the key their totals would silently merge into one number shown on both cards.
   const totalsByCategory = useMemo(() => {
     const totals: Record<string, number> = {};
-    transactions.filter(t => !isInternalTransfer(t)).forEach(t => {
+    transactions.filter(t => !isExcludedFromStats(t)).forEach(t => {
       const key = `${t.type}::${t.category}`;
       totals[key] = (totals[key] || 0) + t.amount;
     });
