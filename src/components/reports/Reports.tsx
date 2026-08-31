@@ -13,6 +13,7 @@ import {
 import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/dateFormat';
 import { getBudgetSpentAmount, getEffectiveBudgetTarget, getReferenceDate } from '../../utils/chartData';
+import { downloadCSV } from '../../utils/fileDownload';
 
 export const Reports: React.FC = () => {
   const { transactions, budgets, goals, monthlyIncome, monthlyExpenses, savingsThisMonth, settings } = useFinance();
@@ -34,7 +35,9 @@ export const Reports: React.FC = () => {
   const referenceDate = React.useMemo(() => new Date(reportMonth + '-15T00:00:00'), [reportMonth]);
 
   // Export handlers
-  const handleExportCSV = (reportTitle: string) => {
+  // Uses downloadCSV() rather than the old data: URI technique, which was unreliable on
+  // iOS Safari and could silently do nothing when tapped — see fileDownload.ts for why.
+  const handleExportCSV = async (reportTitle: string) => {
     let headers: string[] = [];
     let rows: string[] = [];
 
@@ -69,14 +72,8 @@ export const Reports: React.FC = () => {
       ];
     }
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${reportTitle.replace(/\s+/g, '_')}_${reportMonth}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvBody = [headers.join(','), ...rows].join("\n");
+    await downloadCSV(csvBody, `${reportTitle.replace(/\s+/g, '_')}_${reportMonth}.csv`);
   };
 
   const handleExportPDF = () => {
