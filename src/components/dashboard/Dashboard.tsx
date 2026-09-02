@@ -64,6 +64,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
     monthlyExpenses, 
     savingsThisMonth, 
     budgetUsagePercent,
+    hasMonthlyBudget,
     financialHealthScore,
     upcomingBills,
     transactions,
@@ -419,13 +420,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, autoAction, 
             </div>
           </div>
           <div className="mt-4">
-            <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{budgetUsagePercent}%</h3>
-            <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2 rounded-full mt-2 overflow-hidden">
-              <div 
-                className={`h-full rounded-full transition-all duration-500 ${budgetUsagePercent > 90 ? 'bg-warm-terracotta' : budgetUsagePercent > 75 ? 'bg-warm-gold' : 'bg-warm-sage'}`}
-                style={{ width: `${budgetUsagePercent}%` }}
-              ></div>
-            </div>
+            {hasMonthlyBudget ? (
+              <>
+                <h3 className="text-2xl font-extrabold text-warm-text dark:text-warm-dark-text tracking-tight">{budgetUsagePercent}%</h3>
+                <div className="w-full bg-warm-surface dark:bg-warm-dark-surface h-2 rounded-full mt-2 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${budgetUsagePercent > 90 ? 'bg-warm-terracotta' : budgetUsagePercent > 75 ? 'bg-warm-gold' : 'bg-warm-sage'}`}
+                    style={{ width: `${budgetUsagePercent}%` }}
+                  ></div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-extrabold text-warm-muted dark:text-warm-dark-muted tracking-tight">No budget set</h3>
+                <button
+                  onClick={() => setActiveTab('budgets')}
+                  className="text-xs font-bold text-warm-gold dark:text-warm-dark-gold hover:underline mt-1"
+                >
+                  Create a Monthly Budget →
+                </button>
+              </>
+            )}
           </div>
         </div>
 
