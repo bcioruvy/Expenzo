@@ -331,7 +331,7 @@ export const Transactions: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <button
             onClick={handleExportCSV}
             className="flex-1 lg:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
@@ -615,7 +615,7 @@ export const Transactions: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(1)}
