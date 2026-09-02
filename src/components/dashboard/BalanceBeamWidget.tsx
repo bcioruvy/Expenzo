@@ -18,9 +18,17 @@ export const BalanceBeamWidget: React.FC<BalanceBeamWidgetProps> = ({ income, ex
 
   // Tip angle: capped at +/- 12 degrees so it reads as a gentle lean, not a
   // dramatic swing, even when income and expenses are wildly different.
+  //
+  // Sign convention: in SVG/CSS, a POSITIVE rotate() is CLOCKWISE, which moves the
+  // RIGHT point (expense, at pivot+40) DOWN and the LEFT point (income, at pivot-40)
+  // UP. We want the opposite reading — like a real balance scale, the heavier
+  // (bigger) side should sink — so when income > expenses, the beam should rotate
+  // COUNTER-clockwise (negative degrees) to bring the income side down. Hence the
+  // negation here: diff is positive when income is bigger, but the angle needs to
+  // be negative for the income side to actually tip downward.
   const total = income + expenses;
   const diff = total > 0 ? (income - expenses) / total : 0; // -1..1
-  const tiltDeg = Math.max(-12, Math.min(12, diff * 14));
+  const tiltDeg = Math.max(-12, Math.min(12, -diff * 14));
 
   // Pivot point of the beam in the 200x140 viewBox — the top of the fulcrum post.
   const pivotX = 100;
