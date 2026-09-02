@@ -41,6 +41,7 @@ interface FinanceContextType {
   monthlyExpenses: number;
   savingsThisMonth: number;
   budgetUsagePercent: number;
+  hasMonthlyBudget: boolean;
   financialHealthScore: number | null;
   balanceChangePercent: number | null;
   topIncomeSources: string;
@@ -239,6 +240,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Includes rollover: a Monthly Budget with unused allowance from last month effectively
   // has a higher cap this month, and the health score's "budget usage" should reflect that.
+  //
+  // hasMonthlyBudget distinguishes "no budget configured yet" from "spending is within
+  // budget" — without it, totalMonthlyBudget silently falls back to the internal default
+  // monthlyBudgetCap placeholder (a small number nobody actually set), which would make
+  // budgetUsagePercent misleadingly high (even showing a false "100% used") for anyone who
+  // simply hasn't created a budget. Any UI showing this percentage should check
+  // hasMonthlyBudget first and show an empty/CTA state instead when it's false.
+  const hasMonthlyBudget = budgets.some(b => b.type === 'Monthly Budget');
   const totalMonthlyBudget = budgets
     .filter(b => b.type === 'Monthly Budget')
     .reduce((sum, b) => sum + getEffectiveBudgetTarget(b, transactions), 0) || settings.monthlyBudgetCap;
@@ -259,8 +268,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       else if (savingsRate >= 0.10) score += 25;
       else if (savingsRate > 0) score += 10;
     }
-    // Budget usage only counts if a real budget target exists AND money has actually been spent against it
-    if (monthlyExpenses > 0 && budgetUsagePercent < 80) score += 20;
+    // Budget usage only counts if the user has actually set a real Monthly Budget — without
+    // hasMonthlyBudget here, this would score against the meaningless internal fallback cap.
+    if (hasMonthlyBudget && budgetUsagePercent < 80) score += 20;
     const emergencySaved = goals.find(g => g.name.toLowerCase().includes('emergency'))?.currentAmount || 0;
     if (emergencySaved >= 10000) score += 25;
     else if (emergencySaved >= 5000) score += 15;
@@ -706,7 +716,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <FinanceContext.Provider value={{
       accounts, transactions, budgets, goals, notifications, recurringRules, categories, settings, loading, initialLoadComplete, dataLoadError, dataLoadErrorDetails, isServingMockData: isServingMockDataUnintentionally, deleteError, clearDeleteError: () => setDeleteError(null),
-      currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent,
+      currentBalance, monthlyIncome, monthlyExpenses, savingsThisMonth, budgetUsagePercent, hasMonthlyBudget,
       financialHealthScore, balanceChangePercent, topIncomeSources, smartInsights, upcomingBills,
       addTransaction, editTransaction, removeTransaction, removeMultipleTransactions, importTransactions, addAccount, editAccount, removeAccount,
       transferFunds, addBudget, editBudget, removeBudget, addGoal, editGoal, removeGoal,
