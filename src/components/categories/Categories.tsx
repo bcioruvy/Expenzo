@@ -230,11 +230,11 @@ export const Categories: React.FC = () => {
       <div key={cat.id}>
         <div
           ref={setRowRef(cat.id)}
-          className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-4 rounded-2xl border transition-all ${
             cat.isArchived
               ? 'bg-warm-surface/40 dark:bg-warm-dark-surface/20 border-warm-surface dark:border-warm-dark-surface opacity-60'
               : 'bg-warm-bg dark:bg-warm-dark-bg border-warm-surface dark:border-warm-dark-surface'
-          } ${isSub ? 'ml-10 mt-2' : ''} ${isDragged ? 'opacity-40 shadow-lg scale-[0.98]' : ''} ${
+          } ${isSub ? 'ml-4 sm:ml-10 mt-2' : ''} ${isDragged ? 'opacity-40 shadow-lg scale-[0.98]' : ''} ${
             isDragOverTarget && !isDragged
               ? dragOverPosition === 'above'
                 ? 'border-t-2 border-t-warm-sage'
@@ -242,7 +242,7 @@ export const Categories: React.FC = () => {
               : ''
           }`}
         >
-          <div className="flex items-center space-x-3 min-w-0 flex-1">
+          <div className="flex items-center space-x-3 min-w-0 w-full sm:flex-1">
             {!isSub && hasSubCats && (
               <button onClick={() => toggleExpanded(cat.id)} className="text-warm-muted dark:text-warm-dark-muted flex-shrink-0">
                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -270,7 +270,7 @@ export const Categories: React.FC = () => {
               </div>
             </button>
           </div>
-          <div className="flex items-center space-x-1.5 flex-shrink-0 ml-3">
+          <div className="flex items-center space-x-1.5 flex-shrink-0 w-full sm:w-auto justify-end sm:ml-3">
             {!isSub && !cat.isArchived && (
               <button onClick={() => openAddSubModal(cat)} title="Add sub-category" className="p-2 rounded-xl hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted transition-colors">
                 <Plus className="w-4 h-4" />
@@ -332,22 +332,22 @@ export const Categories: React.FC = () => {
           Back to Categories
         </button>
 
-        <div className="bg-white dark:bg-warm-dark-card p-5 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="bg-white dark:bg-warm-dark-card p-5 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
               detailCategory.type === 'Income' ? 'bg-warm-sage/15 text-warm-sage dark:text-warm-dark-sage' : 'bg-warm-terracotta/15 text-warm-terracotta dark:text-warm-dark-terracotta'
             }`}>
               <DetailIcon className="w-6 h-6" />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text">{detailCategory.name}</h2>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text truncate">{detailCategory.name}</h2>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted truncate">
                 {detailTransactions.length} transaction{detailTransactions.length === 1 ? '' : 's'}
                 {subCats.length > 0 && ` · includes ${subCats.length} sub-categor${subCats.length === 1 ? 'y' : 'ies'}`}
               </p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-right flex-shrink-0">
             <p className={`text-2xl font-extrabold tracking-tight ${detailCategory.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
               {formatCurrency(detailTotal, settings.currency)}
             </p>
