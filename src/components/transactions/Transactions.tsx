@@ -314,10 +314,10 @@ export const Transactions: React.FC = () => {
       )}
       
       {/* Action Toolbar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
+      <div className="flex flex-col xl:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
         
         {/* Search Bar */}
-        <div className="w-full lg:w-96 relative">
+        <div className="w-full xl:w-96 relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-warm-dark-muted" />
           </div>
@@ -331,10 +331,10 @@ export const Transactions: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
           <button
             onClick={handleExportCSV}
-            className="flex-1 lg:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
+            className="flex-1 xl:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
           >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
@@ -342,7 +342,7 @@ export const Transactions: React.FC = () => {
 
           <button
             onClick={() => setShowImportModal(true)}
-            className="flex-1 lg:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
+            className="flex-1 xl:flex-none px-4 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface hover:bg-warm-surface dark:hover:bg-warm-dark-surface text-warm-text dark:text-warm-dark-muted font-bold text-sm flex items-center justify-center space-x-2 transition-colors shadow-sm whitespace-nowrap"
           >
             <Upload className="w-4 h-4" />
             <span>Import</span>
@@ -350,7 +350,7 @@ export const Transactions: React.FC = () => {
           
           <button
             onClick={openAddModal}
-            className="flex-1 lg:flex-none px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center justify-center space-x-2 transition-all group whitespace-nowrap"
+            className="flex-1 xl:flex-none px-5 py-3 rounded-2xl bg-gradient-to-r from-warm-sage to-warm-dark-sage hover:from-warm-sage hover:to-warm-dark-sage text-white font-bold text-sm shadow-xl shadow-warm/20 flex items-center justify-center space-x-2 transition-all group whitespace-nowrap"
           >
             <PlusCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
             <span>Add Transaction</span>
@@ -436,20 +436,24 @@ export const Transactions: React.FC = () => {
             )}
           </div>
           <div className="space-y-2">
-            <input
-              type="date"
-              value={filterDateFrom}
-              max={filterDateTo || undefined}
-              onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
-              className="w-full min-w-0 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none focus:ring-2 focus:ring-warm-sage"
-            />
-            <input
-              type="date"
-              value={filterDateTo}
-              min={filterDateFrom || undefined}
-              onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
-              className="w-full min-w-0 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none focus:ring-2 focus:ring-warm-sage"
-            />
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={filterDateFrom}
+                max={filterDateTo || undefined}
+                onChange={(e) => { setFilterDateFrom(e.target.value); setCurrentPage(1); }}
+                className="w-full bg-transparent border-none px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={filterDateTo}
+                min={filterDateFrom || undefined}
+                onChange={(e) => { setFilterDateTo(e.target.value); setCurrentPage(1); }}
+                className="w-full bg-transparent border-none px-2.5 py-1.5 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
           </div>
         </div>
 
