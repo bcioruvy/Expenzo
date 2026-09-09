@@ -113,7 +113,7 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Report Type Tabs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {reportConfigs.map(item => {
           const Icon = item.icon;
           const isActive = selectedReport === item.id;
