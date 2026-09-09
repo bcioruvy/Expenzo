@@ -360,7 +360,7 @@ export const Transactions: React.FC = () => {
       </div>
 
       {/* Filters & Sorting */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         
         {/* Filter Type */}
         <div className="bg-white dark:bg-warm-dark-card p-4 rounded-2xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
