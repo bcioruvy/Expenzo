@@ -16,13 +16,14 @@ import {
   Check, 
   X,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  CalendarCheck
 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol, DEFAULT_CURRENCY, CURRENCY_OPTIONS } from '../../utils/currency';
 import { EmptyState } from '../shared/EmptyState';
 
 export const Accounts: React.FC = () => {
-  const { accounts, transactions, addAccount, addTransaction, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
+  const { accounts, transactions, addAccount, addTransaction, removeMultipleTransactions, editAccount, removeAccount, transferFunds, settings, deleteError, clearDeleteError } = useFinance();
 
   // Modal state for Add/Edit Account
   const [showAccModal, setShowAccModal] = useState(false);
@@ -38,6 +39,9 @@ export const Accounts: React.FC = () => {
 
   // Modal state for Transfer Funds
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [reconcilingAcc, setReconcilingAcc] = useState<Account | null>(null);
+  const [reconcileDate, setReconcileDate] = useState(new Date().toISOString().split('T')[0]);
+  const [reconcileAmount, setReconcileAmount] = useState('');
   const [transFrom, setTransFrom] = useState(accounts[0]?.id || '');
   const [transTo, setTransTo] = useState(accounts[1]?.id || '');
   const [transAmount, setTransAmount] = useState('');
@@ -80,6 +84,57 @@ export const Accounts: React.FC = () => {
     if (confirmed) {
       editAccount({ ...acc, balance: trueBalance });
     }
+  };
+
+  // "Reconcile / Fresh Start" — for when older transaction history is known to be
+  // unreliable (e.g. incomplete data from a manual import) and the user wants this
+  // account to start matching their real bank statement cleanly from a given date
+  // forward. Deletes every transaction on this account dated BEFORE the chosen date
+  // (leaving anything on/after it untouched), then logs the bank-confirmed balance as a
+  // proper "Opening Balance" transaction dated exactly on that day — so, like a newly
+  // created account, the balance stays fully backed by transaction history (safe for
+  // Recalculate Balance) and excluded from income/expense stats.
+  const openReconcileModal = (acc: Account) => {
+    setReconcilingAcc(acc);
+    setReconcileDate(new Date().toISOString().split('T')[0]);
+    setReconcileAmount('');
+  };
+
+  const handleReconcile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reconcilingAcc) return;
+    const amount = parseFloat(reconcileAmount);
+    if (isNaN(amount)) return;
+
+    const staleTransactions = transactions.filter(
+      t => t.accountId === reconcilingAcc.id && t.date < reconcileDate
+    );
+
+    const confirmed = window.confirm(
+      `Reconcile ${reconcilingAcc.name} as of ${reconcileDate}?\n\n` +
+      `This will permanently delete ${staleTransactions.length} transaction${staleTransactions.length === 1 ? '' : 's'} ` +
+      `on this account dated before ${reconcileDate}, and set its balance to ` +
+      `${formatCurrency(amount, reconcilingAcc.currency)} as of that date. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    if (staleTransactions.length > 0) {
+      await removeMultipleTransactions(staleTransactions.map(t => t.id));
+    }
+    if (amount !== 0) {
+      await addTransaction({
+        type: amount > 0 ? 'Income' : 'Expense',
+        amount: Math.abs(amount),
+        category: 'Opening Balance',
+        date: reconcileDate,
+        notes: `Reconciled opening balance for ${reconcilingAcc.name}`,
+        tags: ['opening-balance'],
+        paymentMethod: 'Other',
+        accountId: reconcilingAcc.id,
+        accountName: reconcilingAcc.name,
+      });
+    }
+    setReconcilingAcc(null);
   };
 
   const openAddModal = () => {
@@ -217,7 +272,7 @@ export const Accounts: React.FC = () => {
           />
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {accounts.map(acc => {
           const Icon = getAccountIcon(acc.type);
           return (
@@ -261,6 +316,13 @@ export const Accounts: React.FC = () => {
                     className="p-2 text-warm-dark-muted hover:text-warm-sage hover:bg-warm-sage/10 rounded-xl transition-colors"
                   >
                     <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => openReconcileModal(acc)} 
+                    title="Reconcile / fresh start from a date"
+                    className="p-2 text-warm-dark-muted hover:text-warm-sage hover:bg-warm-sage/10 rounded-xl transition-colors"
+                  >
+                    <CalendarCheck className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => openEditModal(acc)} 
@@ -410,6 +472,39 @@ export const Accounts: React.FC = () => {
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
                 <button type="button" onClick={() => setShowTransferModal(false)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
                 <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-sage hover:bg-warm-sage text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Execute Transfer</button>
+              </div>
+            </form>
+        </Modal>
+      )}
+
+      {reconcilingAcc && (
+        <Modal onClose={() => setReconcilingAcc(null)} maxWidthClassName="max-w-md">
+            <div className="flex items-center justify-between border-b border-warm-surface dark:border-warm-dark-surface/60 pb-4">
+              <h3 className="text-lg font-bold text-warm-text dark:text-warm-dark-text">Reconcile {reconcilingAcc.name}</h3>
+              <button onClick={() => setReconcilingAcc(null)} className="text-warm-dark-muted hover:text-warm-muted dark:hover:text-warm-dark-text font-bold text-xl">&times;</button>
+            </div>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted pt-4">
+              Use this for a clean start when older transaction history is unreliable. Every transaction on this account dated <strong>before</strong> the date below will be permanently deleted, and the balance you confirm here will be recorded as the account's opening balance on that date — so it matches your real bank statement going forward.
+            </p>
+            <form onSubmit={handleReconcile} className="space-y-4 pt-4">
+              <div>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Start Fresh As Of</label>
+                <input
+                  type="date" required value={reconcileDate} onChange={(e) => setReconcileDate(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-medium text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-warm-muted dark:text-warm-dark-muted uppercase mb-1">Confirmed Balance ({getCurrencySymbol(reconcilingAcc.currency)}) as of that date</label>
+                <input
+                  type="number" step="0.01" required value={reconcileAmount} onChange={(e) => setReconcileAmount(e.target.value)} placeholder="e.g. the real balance from your bank statement"
+                  className="w-full p-3 rounded-2xl bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-text dark:text-warm-dark-text focus:ring-2 focus:ring-warm-sage outline-none font-bold text-lg"
+                />
+              </div>
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-warm-surface dark:border-warm-dark-surface/60">
+                <button type="button" onClick={() => setReconcilingAcc(null)} className="px-5 py-3 rounded-2xl bg-warm-surface dark:bg-warm-dark-surface text-warm-muted dark:text-warm-dark-muted font-bold text-sm hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-2xl bg-warm-terracotta hover:bg-warm-dark-terracotta text-white font-bold text-sm shadow-lg shadow-warm/20 transition-all">Reconcile</button>
               </div>
             </form>
         </Modal>
