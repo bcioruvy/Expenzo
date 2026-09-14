@@ -12,45 +12,85 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Shared rule for every collection where each document carries its own
+    // userId field (as opposed to /settings/{userId}, where the uid is the
+    // document ID itself). Applied identically to every user-owned collection
+    // below so a create/update can never assign or move a document onto a
+    // different user's uid.
+    function isOwnedByRequester() {
+      return isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    function isCreatedForRequester() {
+      return isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function keepsSameOwner() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
     // Accounts collection
     match /accounts/{accountId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
     // Transactions collection
     match /transactions/{transactionId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
     // Budgets collection
     match /budgets/{budgetId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
     // Goals collection
     match /goals/{goalId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
-    // Reports collection
+    // Reports collection (not currently read/written by the app, but rule
+    // kept consistent in case a reports feature lands later)
     match /reports/{reportId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
     // Notifications collection
     match /notifications/{notificationId} {
-      allow read, update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
+    }
+
+    // Recurring rules collection (src/firebase/db.ts: getRecurringRules / saveRecurringRule / deleteRecurringRule)
+    match /recurringRules/{ruleId} {
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
+    }
+
+    // Categories collection (src/firebase/db.ts: getCategories / saveCategory / seedDefaultCategories)
+    match /categories/{categoryId} {
+      allow read, delete: if isOwnedByRequester();
+      allow create: if isCreatedForRequester();
+      allow update: if isOwnedByRequester() && keepsSameOwner();
     }
 
     // Settings collection — document ID IS the user's UID (see firebase/db.ts)
     match /settings/{userId} {
       allow read, write: if isOwner(userId);
     }
+
+    // Default deny: anything not explicitly matched above is rejected.
   }
 }
