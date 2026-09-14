@@ -28,3 +28,9 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Firebase Local Emulator Suite
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
