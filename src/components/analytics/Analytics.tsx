@@ -1,26 +1,103 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
-import { 
-  Calendar, 
-  Filter, 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  PieChart as PieIcon, 
-  BarChart2, 
-  Layers 
+import {
+  Calendar,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  PieChart as PieIcon,
+  BarChart2,
+  Layers
 } from 'lucide-react';
-import { getMonthlyIncomeExpense, getCumulativeSavings, getWeeklyCashFlow, getReferenceDate } from '../../utils/chartData';
+import {
+  DateRangePreset,
+  DATE_RANGE_PRESET_OPTIONS,
+  resolvePresetDateRange,
+  normalizeCustomRange,
+  startOfMonthISO,
+  todayISODate,
+  getRangeIncomeExpenseSeries,
+  getRangeCumulativeSavings,
+  getRangeWeeklyCashFlow,
+  getRangeTotals,
+  getRangeSpendingByCategory,
+  getCategoryFilterNames,
+} from '../../utils/chartData';
+import { formatCurrency } from '../../utils/currency';
+import { formatDate } from '../../utils/dateFormat';
 import { EmptyState } from '../shared/EmptyState';
 
+// Friendly, human-readable description of each preset, used in chart subtitles and the
+// page's "period" line so they describe the actual selected range instead of a hardcoded
+// window (the old "Projected savings build-up over 6 months" subtitle, regardless of what
+// was actually selected).
+const RANGE_PRESET_DESCRIPTIONS: Record<DateRangePreset, string> = {
+  this_month: 'this month',
+  last_month: 'last month',
+  last_30_days: 'the last 30 days',
+  last_3_months: 'the last 3 months',
+  last_6_months: 'the last 6 months',
+  this_year: 'this year',
+  last_12_months: 'the last 12 months',
+  all_time: 'all time',
+  custom: 'the selected range',
+};
+
 export const Analytics: React.FC = () => {
-  const { transactions, accounts, budgets } = useFinance();
+  const { transactions, accounts, categories, settings } = useFinance();
 
   // Filters State
-  const [dateRange, setDateRange] = useState('6m'); // 1m, 3m, 6m, 1y
-  const [filterCategory, setFilterCategory] = useState('All');
+  const [rangePreset, setRangePreset] = useState<DateRangePreset>('last_6_months');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All'); // category id, or 'All'
   const [filterAccount, setFilterAccount] = useState('All');
+
+  // Fixed once per mount — presets are anchored to today's real date, not the device
+  // clock re-read on every render (which would shift bucket boundaries mid-session as the
+  // page sits open across midnight).
+  const todayISO = useMemo(() => todayISODate(), []);
+
+  const handlePresetChange = (value: DateRangePreset) => {
+    setRangePreset(value);
+    // First time Custom Range is chosen, prefill with 1st-of-this-month → today.
+    if (value === 'custom' && !customFrom && !customTo) {
+      setCustomFrom(startOfMonthISO(todayISO));
+      setCustomTo(todayISO);
+    }
+  };
+
+  // Keeps the two Custom Range inputs always in chronological order — if the user picks a
+  // From date after the current To date, the two values swap rather than producing an
+  // inverted (and silently empty) range.
+  const handleCustomFromChange = (value: string) => {
+    if (customTo && value > customTo) {
+      setCustomFrom(customTo);
+      setCustomTo(value);
+    } else {
+      setCustomFrom(value);
+    }
+  };
+  const handleCustomToChange = (value: string) => {
+    if (customFrom && value < customFrom) {
+      setCustomTo(customFrom);
+      setCustomFrom(value);
+    } else {
+      setCustomTo(value);
+    }
+  };
+
+  const resolvedRange = useMemo(() => {
+    if (rangePreset === 'custom') {
+      if (customFrom && customTo) return normalizeCustomRange(customFrom, customTo);
+      return { start: startOfMonthISO(todayISO), end: todayISO };
+    }
+    return resolvePresetDateRange(rangePreset, transactions, new Date());
+  }, [rangePreset, customFrom, customTo, transactions, todayISO]);
+
+  const rangeDescription = RANGE_PRESET_DESCRIPTIONS[rangePreset];
 
   // Chart configuration defaults
   const baseChartOptions = {
@@ -52,79 +129,70 @@ export const Analytics: React.FC = () => {
     }
   };
 
-  // Prepare filtered transactions for analytics
-  // Maps the Date Range selector to an actual number of months/weeks of history to show,
-  // instead of the selector just sitting there disconnected from every chart.
-  const dateRangeMonths: Record<string, number> = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 };
-  const monthsWindow = dateRangeMonths[dateRange] || 6;
-  const weeksWindow = dateRange === '1m' ? 4 : dateRange === '3m' ? 12 : dateRange === '1y' ? 52 : 24;
+  // Non-archived categories, grouped into Expense/Income for the dropdown — selecting a
+  // parent category filters its sub-categories too (handled by getCategoryFilterNames).
+  const activeCategories = useMemo(() => categories.filter(c => !c.isArchived), [categories]);
+  const subsOf = (parentId: string) =>
+    activeCategories.filter(c => c.parentId === parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+  const expenseParentCategories = activeCategories
+    .filter(c => c.type === 'Expense' && !c.parentId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const incomeParentCategories = activeCategories
+    .filter(c => c.type === 'Income' && !c.parentId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
-  const referenceDate = useMemo(() => getReferenceDate(transactions), [transactions]);
-
-  const filteredTxs = useMemo(() => {
-    let list = [...transactions];
+  // Transactions scoped by category + account only — the date range is applied inside the
+  // chartData range helpers themselves, so every chart/total below works off this same list.
+  const scopedTxs = useMemo(() => {
+    let list = transactions;
     if (filterCategory !== 'All') {
-      list = list.filter(t => t.category === filterCategory);
+      const categoryFilter = getCategoryFilterNames(categories, filterCategory);
+      if (categoryFilter) {
+        list = list.filter(t => t.type === categoryFilter.type && categoryFilter.names.includes(t.category));
+      }
     }
     if (filterAccount !== 'All') {
       list = list.filter(t => t.accountId === filterAccount);
     }
-    // Apply the selected date range — cuts off transactions older than the window,
-    // anchored to the same reference date the charts use (not the raw device clock).
-    const cutoff = new Date(referenceDate);
-    cutoff.setMonth(cutoff.getMonth() - monthsWindow);
-    list = list.filter(t => new Date(t.date + 'T00:00:00') >= cutoff);
     return list;
-  }, [transactions, filterCategory, filterAccount, monthsWindow, referenceDate]);
+  }, [transactions, filterCategory, filterAccount, categories]);
 
-  // Calculations for charts
-  const expenseSummaryByCategory: Record<string, number> = {};
-  filteredTxs.filter(t => t.type === 'Expense').forEach(t => {
-    expenseSummaryByCategory[t.category] = (expenseSummaryByCategory[t.category] || 0) + t.amount;
-  });
+  const totals = useMemo(
+    () => getRangeTotals(scopedTxs, resolvedRange.start, resolvedRange.end),
+    [scopedTxs, resolvedRange]
+  );
 
+  const { labels: expenseLabels, values: expenseValues } = useMemo(
+    () => getRangeSpendingByCategory(scopedTxs, resolvedRange.start, resolvedRange.end),
+    [scopedTxs, resolvedRange]
+  );
   const pieData = {
-    labels: Object.keys(expenseSummaryByCategory),
+    labels: expenseLabels,
     datasets: [{
-      data: Object.values(expenseSummaryByCategory),
+      data: expenseValues,
       backgroundColor: ['#6E8B74', '#C98B6A', '#C7A86B', '#89A48E', '#D59B7B', '#D4B97C', '#A88F6E', '#8FA893'],
       borderWidth: 0
     }]
   };
+  const hasSpendingData = expenseLabels.length > 0;
 
-  // Category/account-filtered but NOT date-cutoff transactions — cumulative savings
-  // needs the full history to build an accurate running total; only the number of
-  // months displayed should change with the date range, not the starting balance.
-  const categoryAccountFilteredTxs = useMemo(() => {
-    let list = [...transactions];
-    if (filterCategory !== 'All') list = list.filter(t => t.category === filterCategory);
-    if (filterAccount !== 'All') list = list.filter(t => t.accountId === filterAccount);
-    return list;
-  }, [transactions, filterCategory, filterAccount]);
-
-  // Monthly Comparison Bar Chart Data — computed from real transactions
-  const { labels: monthLabels, income: monthlyIncomeSeries, expenses: monthlyExpenseSeries } = getMonthlyIncomeExpense(filteredTxs, monthsWindow, referenceDate);
-  const hasMonthlyData = monthlyIncomeSeries.some(v => v > 0) || monthlyExpenseSeries.some(v => v > 0);
+  const { labels: seriesLabels, income: incomeSeries, expenses: expenseSeries } = useMemo(
+    () => getRangeIncomeExpenseSeries(scopedTxs, resolvedRange.start, resolvedRange.end),
+    [scopedTxs, resolvedRange]
+  );
+  const hasMonthlyData = incomeSeries.some(v => v > 0) || expenseSeries.some(v => v > 0);
   const barData = {
-    labels: monthLabels,
+    labels: seriesLabels,
     datasets: [
-      {
-        label: 'Income',
-        data: monthlyIncomeSeries,
-        backgroundColor: '#6E8B74',
-        borderRadius: 8
-      },
-      {
-        label: 'Expenses',
-        data: monthlyExpenseSeries,
-        backgroundColor: '#C98B6A',
-        borderRadius: 8
-      }
+      { label: 'Income', data: incomeSeries, backgroundColor: '#6E8B74', borderRadius: 8 },
+      { label: 'Expenses', data: expenseSeries, backgroundColor: '#C98B6A', borderRadius: 8 }
     ]
   };
 
-  // Savings Analysis Area Chart Data — cumulative real net savings
-  const { labels: savingsLabels, cumulative } = getCumulativeSavings(categoryAccountFilteredTxs, monthsWindow, referenceDate);
+  const { labels: savingsLabels, cumulative } = useMemo(
+    () => getRangeCumulativeSavings(scopedTxs, resolvedRange.start, resolvedRange.end),
+    [scopedTxs, resolvedRange]
+  );
   const hasSavingsData = cumulative.some(v => v !== 0);
   const areaData = {
     labels: savingsLabels,
@@ -142,8 +210,10 @@ export const Analytics: React.FC = () => {
     ]
   };
 
-  // Cash Flow Line Chart Data — real net flow per week
-  const { labels: cashFlowLabels, netFlow } = getWeeklyCashFlow(filteredTxs, Math.min(weeksWindow, 12), referenceDate);
+  const { labels: cashFlowLabels, netFlow } = useMemo(
+    () => getRangeWeeklyCashFlow(scopedTxs, resolvedRange.start, resolvedRange.end),
+    [scopedTxs, resolvedRange]
+  );
   const hasCashFlowData = netFlow.some(v => v !== 0);
   const cashFlowLineData = {
     labels: cashFlowLabels,
@@ -161,32 +231,31 @@ export const Analytics: React.FC = () => {
     ]
   };
 
-  const hasSpendingData = Object.keys(expenseSummaryByCategory).length > 0;
-
   return (
     <div className="space-y-8">
-      
+
       {/* Analytics Toolbar & Filters */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
+      <div className="flex flex-col xl:flex-row items-center justify-between gap-4 bg-white dark:bg-warm-dark-card p-6 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none">
         <div>
           <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Advanced Financial Analytics</h2>
-          <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">Extract powerful insights from your cash flow, spending trends, and net savings growth.</p>
+          <p className="text-xs text-warm-muted dark:text-warm-dark-muted mt-1">
+            {formatDate(resolvedRange.start, settings.dateFormat)} – {formatDate(resolvedRange.end, settings.dateFormat)}
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
-          
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end">
+
           {/* Date Range Selection */}
           <div className="flex items-center space-x-2 bg-warm-bg dark:bg-warm-dark-bg p-1.5 rounded-2xl border border-warm-surface dark:border-warm-dark-surface">
             <Calendar className="w-4 h-4 text-warm-sage ml-2" />
             <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
+              value={rangePreset}
+              onChange={(e) => handlePresetChange(e.target.value as DateRangePreset)}
               className="bg-transparent text-warm-text dark:text-warm-dark-text text-xs font-bold focus:outline-none pr-2"
             >
-              <option value="1m">Last 30 Days</option>
-              <option value="3m">Last 3 Months</option>
-              <option value="6m">Last 6 Months</option>
-              <option value="1y">Last 1 Year</option>
+              {DATE_RANGE_PRESET_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
@@ -199,11 +268,26 @@ export const Analytics: React.FC = () => {
               className="bg-transparent text-warm-text dark:text-warm-dark-text text-xs font-bold focus:outline-none pr-2"
             >
               <option value="All">All Categories</option>
-              <option value="Food & Dining">Food & Dining</option>
-              <option value="Groceries">Groceries</option>
-              <option value="Rent">Rent</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Subscriptions">Subscriptions</option>
+              <optgroup label="Expense">
+                {expenseParentCategories.map(p => (
+                  <React.Fragment key={p.id}>
+                    <option value={p.id}>{p.name}</option>
+                    {subsOf(p.id).map(s => (
+                      <option key={s.id} value={s.id}>{'  ↳ '}{s.name}</option>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </optgroup>
+              <optgroup label="Income">
+                {incomeParentCategories.map(p => (
+                  <React.Fragment key={p.id}>
+                    <option value={p.id}>{p.name}</option>
+                    {subsOf(p.id).map(s => (
+                      <option key={s.id} value={s.id}>{'  ↳ '}{s.name}</option>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </optgroup>
             </select>
           </div>
 
@@ -223,15 +307,64 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
+      {/* Custom Range inputs — only shown once "Custom Range" is selected */}
+      {rangePreset === 'custom' && (
+        <div className="bg-white dark:bg-warm-dark-card p-5 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
+          <label className="block text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted mb-2">Custom Range</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={customFrom}
+                onChange={(e) => handleCustomFromChange(e.target.value)}
+                className="w-full bg-transparent border-none px-3 py-2 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={customTo}
+                onChange={(e) => handleCustomToChange(e.target.value)}
+                className="w-full bg-transparent border-none px-3 py-2 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Totals for the selected period + filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="p-6 rounded-2xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
+          <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted flex items-center gap-1.5">
+            <TrendingUp className="w-3.5 h-3.5" /> Income
+          </span>
+          <p className="text-2xl font-extrabold text-warm-sage dark:text-warm-dark-sage mt-2">{formatCurrency(totals.income, settings.currency)}</p>
+        </div>
+        <div className="p-6 rounded-2xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
+          <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted flex items-center gap-1.5">
+            <TrendingDown className="w-3.5 h-3.5" /> Expenses
+          </span>
+          <p className="text-2xl font-extrabold text-warm-terracotta dark:text-warm-dark-terracotta mt-2">{formatCurrency(totals.expenses, settings.currency)}</p>
+        </div>
+        <div className="p-6 rounded-2xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm">
+          <span className="text-xs font-bold uppercase text-warm-muted dark:text-warm-dark-muted flex items-center gap-1.5">
+            <DollarSign className="w-3.5 h-3.5" /> Net
+          </span>
+          <p className={`text-2xl font-extrabold mt-2 ${totals.net >= 0 ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
+            {formatCurrency(totals.net, settings.currency)}
+          </p>
+        </div>
+      </div>
+
       {/* Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
+
         {/* Monthly Comparison Bar Chart */}
         <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Monthly Income & Expense Comparison</h3>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Cash flow balanced overview</p>
+              <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Income & Expense Comparison</h3>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Income vs. expenses for {rangeDescription}</p>
             </div>
             <BarChart2 className="w-5 h-5 text-warm-sage" />
           </div>
@@ -242,7 +375,7 @@ export const Analytics: React.FC = () => {
               <EmptyState
                 icon={BarChart2}
                 title="No income or expenses yet"
-                message="Add a transaction to see your monthly income and spending compared here."
+                message="Add a transaction to see your income and spending compared here."
               />
             )}
           </div>
@@ -253,7 +386,7 @@ export const Analytics: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Cumulative Savings Analysis</h3>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Projected savings build-up over 6 months</p>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Savings build-up for {rangeDescription}</p>
             </div>
             <Layers className="w-5 h-5 text-warm-gold" />
           </div>
@@ -275,7 +408,7 @@ export const Analytics: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Spending Breakdown by Category</h3>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Proportional visual distribution</p>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Proportional breakdown for {rangeDescription}</p>
             </div>
             <PieIcon className="w-5 h-5 text-warm-gold dark:text-warm-dark-gold" />
           </div>
@@ -292,12 +425,12 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Monthly Cash Flow Line Chart */}
+        {/* Weekly Cash Flow Line Chart */}
         <div className="p-6 rounded-3xl bg-white dark:bg-warm-dark-card border border-warm-surface dark:border-warm-dark-surface/60 shadow-xl shadow-warm dark:shadow-none flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-bold text-warm-text dark:text-warm-dark-text tracking-tight">Weekly Net Cash Flow</h3>
-              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Real-time liquidity and wallet health</p>
+              <p className="text-xs text-warm-muted dark:text-warm-dark-muted">Net weekly flow for {rangeDescription}</p>
             </div>
             <TrendingUp className="w-5 h-5 text-warm-sage dark:text-warm-dark-sage" />
           </div>

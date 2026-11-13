@@ -5,9 +5,9 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { resolveCategoryIcon, AVAILABLE_ICON_NAMES } from '../../utils/categoryIcons';
 import { formatCurrency } from '../../utils/currency';
-import { isExcludedFromStats } from '../../utils/chartData';
+import { isExcludedFromStats, resolvePresetDateRange, parseISODateLocal, todayISODate } from '../../utils/chartData';
 import { formatDate } from '../../utils/dateFormat';
-import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check, ArrowLeft, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Plus, ChevronDown, ChevronRight, GripVertical, Archive, ArchiveRestore, Edit3, Tags, Check, ArrowLeft, ArrowUpRight, ArrowDownRight, Search, SearchX } from 'lucide-react';
 
 export const Categories: React.FC = () => {
   const { categories, transactions, settings, addCategory, editCategory, archiveCategory, restoreCategory } = useFinance();
@@ -136,6 +136,38 @@ export const Categories: React.FC = () => {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<'above' | 'below'>('below');
   const [detailCategory, setDetailCategory] = useState<Category | null>(null);
+  const [detailSearch, setDetailSearch] = useState('');
+  const [detailDateFrom, setDetailDateFrom] = useState('');
+  const [detailDateTo, setDetailDateTo] = useState('');
+
+  // Opens the drill-down view for a category, always starting from a clean slate — a
+  // search term or date range left over from a previously-viewed category should never
+  // silently carry over and hide transactions in the next one.
+  const openCategoryDetail = (cat: Category) => {
+    setDetailSearch('');
+    setDetailDateFrom('');
+    setDetailDateTo('');
+    setDetailCategory(cat);
+  };
+
+  const todayISO = useMemo(() => todayISODate(), []);
+  const applyDetailQuickRange = (preset: 'this_month' | 'last_month' | 'this_year' | 'all_time') => {
+    if (preset === 'all_time') {
+      setDetailDateFrom('');
+      setDetailDateTo('');
+      return;
+    }
+    // `transactions` param is unused by these three presets — only 'all_time' needs it.
+    const { start, end } = resolvePresetDateRange(preset, [], parseISODateLocal(todayISO));
+    setDetailDateFrom(start);
+    setDetailDateTo(end);
+  };
+  const clearDetailFilters = () => {
+    setDetailSearch('');
+    setDetailDateFrom('');
+    setDetailDateTo('');
+  };
+  const hasActiveDetailFilters = !!(detailSearch.trim() || detailDateFrom || detailDateTo);
 
   const handleDragPointerDown = (e: React.PointerEvent, cat: Category) => {
     if (cat.isArchived) return;
@@ -250,7 +282,7 @@ export const Categories: React.FC = () => {
             )}
             {!isSub && !hasSubCats && <div className="w-4 flex-shrink-0" />}
             <button
-              onClick={() => setDetailCategory(cat)}
+              onClick={() => openCategoryDetail(cat)}
               title="View transactions in this category"
               className="flex items-center space-x-3 min-w-0 flex-1 text-left"
             >
@@ -316,8 +348,26 @@ export const Categories: React.FC = () => {
   if (detailCategory) {
     const subCats = detailCategory.parentId ? [] : getSubCategories(detailCategory.id);
     const relevantNames = new Set([detailCategory.name, ...subCats.map(s => s.name)]);
-    const detailTransactions = transactions
-      .filter(t => t.type === detailCategory.type && relevantNames.has(t.category))
+    // Everything filed under this category (and its sub-categories, if any) — unfiltered
+    // by search/date, used only for the "X of Y transactions" count below.
+    const allDetailTransactions = transactions.filter(t => t.type === detailCategory.type && relevantNames.has(t.category));
+
+    const detailTransactions = allDetailTransactions
+      .filter(t => {
+        if (detailDateFrom && t.date < detailDateFrom) return false;
+        if (detailDateTo && t.date > detailDateTo) return false;
+        if (detailSearch.trim()) {
+          const q = detailSearch.trim().toLowerCase();
+          const matches =
+            t.notes.toLowerCase().includes(q) ||
+            t.accountName.toLowerCase().includes(q) ||
+            t.category.toLowerCase().includes(q) ||
+            String(t.amount).includes(q) ||
+            t.tags.some(tag => tag.toLowerCase().includes(q));
+          if (!matches) return false;
+        }
+        return true;
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     const detailTotal = detailTransactions.reduce((sum, t) => sum + t.amount, 0);
     const DetailIcon = resolveCategoryIcon(detailCategory.icon);
@@ -342,7 +392,9 @@ export const Categories: React.FC = () => {
             <div className="min-w-0">
               <h2 className="text-xl font-bold text-warm-text dark:text-warm-dark-text truncate">{detailCategory.name}</h2>
               <p className="text-xs text-warm-muted dark:text-warm-dark-muted truncate">
-                {detailTransactions.length} transaction{detailTransactions.length === 1 ? '' : 's'}
+                {hasActiveDetailFilters
+                  ? `${detailTransactions.length} of ${allDetailTransactions.length} transaction${allDetailTransactions.length === 1 ? '' : 's'}`
+                  : `${allDetailTransactions.length} transaction${allDetailTransactions.length === 1 ? '' : 's'}`}
                 {subCats.length > 0 && ` · includes ${subCats.length} sub-categor${subCats.length === 1 ? 'y' : 'ies'}`}
               </p>
             </div>
@@ -351,16 +403,88 @@ export const Categories: React.FC = () => {
             <p className={`text-2xl font-extrabold tracking-tight ${detailCategory.type === 'Income' ? 'text-warm-sage dark:text-warm-dark-sage' : 'text-warm-terracotta dark:text-warm-dark-terracotta'}`}>
               {formatCurrency(detailTotal, settings.currency)}
             </p>
-            <p className="text-xs text-warm-muted dark:text-warm-dark-muted">total {detailCategory.type === 'Income' ? 'earned' : 'spent'}</p>
+            <p className="text-xs text-warm-muted dark:text-warm-dark-muted">
+              total {detailCategory.type === 'Income' ? 'earned' : 'spent'}{hasActiveDetailFilters && ' (filtered)'}
+            </p>
+          </div>
+        </div>
+
+        {/* Search + date range filters for this category's transactions */}
+        <div className="bg-white dark:bg-warm-dark-card p-5 rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm space-y-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-warm-dark-muted" />
+            </div>
+            <input
+              type="text"
+              value={detailSearch}
+              onChange={(e) => setDetailSearch(e.target.value)}
+              placeholder="Search notes, account, category, amount, tags..."
+              className="w-full pl-11 pr-4 py-2.5 bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl text-warm-text dark:text-warm-dark-text placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-warm-sage text-sm font-medium transition-all"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={detailDateFrom}
+                max={detailDateTo || undefined}
+                onChange={(e) => setDetailDateFrom(e.target.value)}
+                className="w-full bg-transparent border-none px-3 py-2 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+            <div className="w-full bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-warm-sage">
+              <input
+                type="date"
+                value={detailDateTo}
+                min={detailDateFrom || undefined}
+                onChange={(e) => setDetailDateTo(e.target.value)}
+                className="w-full bg-transparent border-none px-3 py-2 text-warm-text dark:text-warm-dark-text font-bold text-xs focus:outline-none [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center flex-wrap gap-2">
+              <button onClick={() => applyDetailQuickRange('this_month')} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">
+                This Month
+              </button>
+              <button onClick={() => applyDetailQuickRange('last_month')} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">
+                Last Month
+              </button>
+              <button onClick={() => applyDetailQuickRange('this_year')} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">
+                This Year
+              </button>
+              <button onClick={() => applyDetailQuickRange('all_time')} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-warm-bg dark:bg-warm-dark-bg border border-warm-surface dark:border-warm-dark-surface text-warm-muted dark:text-warm-dark-muted hover:bg-warm-surface dark:hover:bg-warm-dark-surface transition-colors">
+                All Time
+              </button>
+            </div>
+            {hasActiveDetailFilters && (
+              <button
+                onClick={clearDetailFilters}
+                className="text-xs font-bold text-warm-terracotta dark:text-warm-dark-terracotta"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         </div>
 
         {detailTransactions.length === 0 ? (
-          <EmptyState
-            icon={Tags}
-            title="No transactions yet"
-            message={`Transactions filed under "${detailCategory.name}" will show up here.`}
-          />
+          hasActiveDetailFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title="No matching transactions"
+              message="Try a different search term or widen the date range."
+            />
+          ) : (
+            <EmptyState
+              icon={Tags}
+              title="No transactions yet"
+              message={`Transactions filed under "${detailCategory.name}" will show up here.`}
+            />
+          )
         ) : (
           <div className="bg-white dark:bg-warm-dark-card rounded-3xl border border-warm-surface dark:border-warm-dark-surface/60 shadow-sm divide-y divide-warm-surface dark:divide-warm-dark-surface/60">
             {detailTransactions.map(t => (
